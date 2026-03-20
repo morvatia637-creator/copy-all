@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Pro Copy - ابزار حرفه‌ای کپی ۷۰۰۰تایی</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .app-card {
+            background: var(--card);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-size: 24px; margin-bottom: 10px; background: linear-gradient(to left, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 30px; }
+
+        .upload-area {
+            border: 2px dashed #475569;
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .upload-area:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+
+        input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+
+        .icon { font-size: 40px; margin-bottom: 10px; display: block; }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background: #334155;
+            border: 1px solid #475569;
+            color: white;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .control-panel { margin-top: 30px; display: none; }
+
+        .progress-container {
+            background: #334155;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            transition: 0.5s;
+        }
+
+        .stats { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 20px; }
+
+        .main-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            transition: 0.3s;
+        }
+        .main-btn:active { transform: scale(0.95); }
+        .main-btn.copied { background: var(--success); }
+
+        .preview-box {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 11px;
+            color: #64748b;
+            text-align: left;
+            margin-top: 20px;
+            max-height: 60px;
+            overflow: hidden;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <h1>Excel Pro Copy</h1>
+    <p>استخراج و کپی هوشمند ۷۰۰۰تایی</p>
+
+    <div class="upload-area" id="dropZone">
+        <span class="icon">📁</span>
+        <span id="fileName">انتخاب فایل اکسل</span>
+        <input type="file" id="fileInput" accept=".xlsx, .xls">
+    </div>
+
+    <div id="selectionStep" style="display:none;">
+        <select id="columnSelect"></select>
+    </div>
+
+    <div class="control-panel" id="controlPanel">
+        <div class="stats">
+            <span id="progressText">بخش ۱ از ۱</span>
+            <span id="totalRows">کل ردیف‌ها: ۰</span>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <button class="main-btn" id="copyBtn">کپی ۷۰۰۰ تای اول</button>
+        
+        <div class="preview-box" id="preview">
+            پیش‌نمایش داده‌ها در اینجا نمایش داده می‌شود...
+        </div>
+
+        <p style="margin-top:20px; font-size: 12px;">بعد از کپی، دکمه به طور خودکار برای ۷۰۰۰ تای بعدی آماده می‌شود.</p>
+    </div>
+</div>
+
+<script>
+    let rows = [];
+    let currentIndex = 0;
+    const CHUNK_SIZE = 7000;
+
+    const fileInput = document.getElementById('fileInput');
+    const columnSelect = document.getElementById('columnSelect');
+    const controlPanel = document.getElementById('controlPanel');
+    const copyBtn = document.getElementById('copyBtn');
+    const progressBar = document.getElementById('progressBar');
+    const preview = document.getElementById('preview');
+
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById('fileName').innerText = file.name;
+        
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        
+        const headers = json[0];
+        columnSelect.innerHTML = '<option value="">--- انتخاب ستون هدف ---</option>';
+        headers.forEach((h, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = h || `ستون ${i+1}`;
+            columnSelect.appendChild(opt);
+        });
+        
+        document.getElementById('selectionStep').style.display = 'block';
+        window.fullData = json.slice(1); 
+    });
+
+    columnSelect.addEventListener('change', function() {
+        const colIdx = this.value;
+        if (colIdx === "") return;
+
+        rows = window.fullData.map(r => r[colIdx]).filter(c => c !== undefined && c !== "");
+        currentIndex = 0;
+        
+        document.getElementById('totalRows').innerText = `کل ردیف‌ها: ${rows.length}`;
+        controlPanel.style.display = 'block';
+        updateUI();
+    });
+
+    function updateUI() {
+        const totalChunks = Math.ceil(rows.length / CHUNK_SIZE);
+        const currentPart = Math.floor(currentIndex / CHUNK_SIZE) + 1;
+        
+        document.getElementById('progressText').innerText = `بخش ${currentPart} از ${totalChunks}`;
+        
+        const progress = (currentIndex / rows.length) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        const end = Math.min(currentIndex + CHUNK_SIZE, rows.length);
+        copyBtn.innerText = `کپی ردیف ${currentIndex + 1} تا ${end}`;
+
+        // نمایش پیش‌نمایش
+        const sample = rows.slice(currentIndex, currentIndex + 3).join(', ');
+        preview.innerText = `آماده برای کپی: ${sample}...`;
+    }
+
+    copyBtn.addEventListener('click', () => {
+        const end = Math.min(currentIndex + CHUNK_SIZE, rows.length);
+        const chunk = rows.slice(currentIndex, end).join('\n');
+
+        navigator.clipboard.writeText(chunk).then(() => {
+            // افکت کپی شد
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = "کپی شد! ✅";
+            copyBtn.classList.add('copied');
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                
+                // رفتن به مرحله بعد
+                if (end < rows.length) {
+                    currentIndex += CHUNK_SIZE;
+                    updateUI();
+                } else {
+                    copyBtn.innerText = "تمام ردیف‌ها کپی شدند 🎉";
+                    progressBar.style.width = `100%`;
+                    progressBar.style.background = `var(--success)`;
+                }
+            }, 1500);
+        });
+    });
+</script>
+
+</body>
+</html>
