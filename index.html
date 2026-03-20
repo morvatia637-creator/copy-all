@@ -3,149 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Copy - نسخه هوشمند</title>
+    <title>Excel Pro Master - دستیار کپی هوشمند</title>
+    <!-- بارگذاری فونت زیبای وزیر و کتابخانه اکسل -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #6366f1; --success: #22c55e; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
-        .app-card { background: var(--card); width: 100%; max-width: 450px; border-radius: 24px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        h1 { font-size: 22px; margin-bottom: 5px; background: linear-gradient(to left, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .upload-area { border: 2px dashed #475569; border-radius: 16px; padding: 20px; cursor: pointer; position: relative; margin: 20px 0; }
-        input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        select { width: 100%; padding: 12px; background: #334155; border: 1px solid #475569; color: white; border-radius: 12px; margin: 10px 0; outline: none; }
-        .progress-container { background: #334155; height: 10px; border-radius: 10px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { height: 100%; width: 0%; background: linear-gradient(to right, #6366f1, #a855f7); transition: 0.5s; }
-        .main-btn { background: linear-gradient(135deg, #4f46e5, #9333ea); color: white; border: none; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .main-btn:active { transform: scale(0.98); }
-        .main-btn.copied { background: var(--success); }
-        .reset-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 8px 15px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 20px; }
-        .preview-box { background: #0f172a; border-radius: 12px; padding: 10px; font-size: 11px; color: #64748b; text-align: left; margin-top: 15px; border-left: 3px solid var(--primary); }
-        .resume-alert { background: #374151; padding: 10px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; border: 1px solid var(--primary); display: none; }
+        :root {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --accent: #c084fc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --glass: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: #f1f5f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            margin: 0;
+            background: linear-gradient(to left, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        header p { color: #94a3b8; font-size: 13px; margin-top: 5px; }
+
+        /* بخش آپلود */
+        .upload-section {
+            margin: 25px 0;
+            border: 2px dashed #334155;
+            border-radius: 20px;
+            padding: 40px 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .upload-section:active { transform: scale(0.98); border-color: var(--primary); }
+        .upload-section input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-icon { font-size: 45px; display: block; margin-bottom: 10px; }
+
+        /* انتخابگرها */
+        select {
+            width: 100%;
+            padding: 14px;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 14px;
+            font-family: 'Vazirmatn';
+            font-size: 15px;
+            outline: none;
+            margin-top: 15px;
+        }
+
+        /* پنل کنترل */
+        .control-panel { display: none; margin-top: 25px; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 8px; }
+        .bar-bg { background: #334155; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .btn-copy {
+            background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+            color: white; border: none; width: 100%; padding: 18px; border-radius: 18px;
+            font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn';
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); transition: 0.3s;
+        }
+        .btn-copy:active { transform: scale(0.96); box-shadow: none; }
+        .btn-copy.success { background: var(--success); }
+
+        .preview-area {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 14px; padding: 15px; margin-top: 20px;
+            font-size: 12px; border-right: 4px solid var(--primary); color: #94a3b8;
+            max-height: 80px; overflow: hidden;
+        }
+
+        /* دکمه‌های ابزار */
+        .tools { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-tool {
+            flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--border);
+            background: transparent; color: #f1f5f9; font-family: 'Vazirmatn'; font-size: 12px; cursor: pointer;
+        }
+        .btn-danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+
+        /* فوتر و توسعه‌دهنده */
+        footer { text-align: center; margin-top: auto; padding: 20px; width: 100%; }
+        .dev-card {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 100px;
+            font-size: 12px; color: #94a3b8; border: 1px solid var(--border);
+        }
+        .dev-card b { color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <h1>Excel Pro Copy v2</h1>
-    
-    <div id="resumeAlert" class="resume-alert">
-        ⏳ شما قبلاً تا ردیف <span id="savedRow">0</span> پیش رفته بودید. فایل را آپلود کنید تا ادامه دهیم.
+<div class="container">
+    <header>
+        <h1>Excel Pro Master</h1>
+        <p>استخراج هوشمند داده‌ها در بسته‌های ۷۰۰۰تایی</p>
+    </header>
+
+    <!-- بخش آپلود -->
+    <div id="uploadWrapper">
+        <div class="upload-section">
+            <span class="upload-icon">📂</span>
+            <span id="fileStatus">فایل اکسل را انتخاب یا اینجا رها کنید</span>
+            <input type="file" id="fileInput" accept=".xlsx, .xls">
+        </div>
+        <div id="resumeTip" style="display:none; font-size: 11px; color: var(--accent); text-align: center;">
+             🔄 حافظه فعال: آماده ادامه از ردیف <span id="savedRow">0</span>
+        </div>
     </div>
 
-    <div class="upload-area">
-        <span id="fileName">📁 انتخاب فایل اکسل</span>
-        <input type="file" id="fileInput" accept=".xlsx, .xls">
-    </div>
-
+    <!-- مرحله انتخاب ستون -->
     <div id="selectionStep" style="display:none;">
         <select id="columnSelect"></select>
     </div>
 
-    <div id="controlPanel" style="display:none; margin-top: 20px;">
-        <div style="display:flex; justify-content: space-between; font-size: 12px; color: #94a3b8;">
-            <span id="progressText">بخش ۱</span>
-            <span id="totalRowsText">کل: ۰</span>
+    <!-- مرحله کپی و کنترل -->
+    <div id="controlPanel" class="control-panel">
+        <div class="progress-info">
+            <span id="chunkInfo">بخش ۱ از ۱</span>
+            <span id="totalInfo">کل: ۰ ردیف</span>
         </div>
-        <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
-        <button class="main-btn" id="copyBtn">کپی ۷۰۰۰ تای اول</button>
-        <div class="preview-box" id="preview">در انتظار کپی...</div>
-        <button class="reset-btn" id="resetBtn">پاکسازی حافظه و شروع مجدد</button>
+        <div class="bar-bg"><div id="progressBar" class="bar-fill"></div></div>
+        
+        <button id="copyBtn" class="btn-copy">کپی ۷۰۰۰ تای اول</button>
+        
+        <div class="preview-area" id="previewBox">
+            در انتظار انتخاب ستون...
+        </div>
+
+        <div class="tools">
+            <button class="btn-tool btn-danger" id="deleteFile">❌ حذف فایل و شروع مجدد</button>
+        </div>
     </div>
 </div>
 
-<script>
-    let rows = [];
-    let currentIndex = 0;
-    const CHUNK_SIZE = 7000;
+<footer>
+    <div class="dev-card">
+        توسعه داده شده توسط: <b>سایبری لرستان</b>
+    </div>
+</footer>
 
-    // بارگذاری وضعیت قبلی از حافظه مرورگر
+<script>
+    let fullRows = [];
+    let currentIndex = 0;
+    const CHUNK = 7000;
+
+    // بارگذاری حافظه
     window.onload = () => {
-        const saved = localStorage.getItem('excel_index');
+        const saved = localStorage.getItem('last_idx');
         if (saved && parseInt(saved) > 0) {
-            document.getElementById('resumeAlert').style.display = 'block';
-            document.getElementById('savedRow').innerText = saved;
+            document.getElementById('resumeTip').style.display = 'block';
+            document.getElementById('savedRow').innerText = parseInt(saved) + 1;
             currentIndex = parseInt(saved);
         }
     };
 
+    // هندل آپلود فایل
     document.getElementById('fileInput').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        document.getElementById('fileName').innerText = file.name;
+
+        document.getElementById('fileStatus').innerHTML = `در حال تحلیل <b>${file.name}</b>...`;
         
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
-        
-        window.fullData = json;
+
+        window.rawJson = json;
         const headers = json[0];
+        
         const select = document.getElementById('columnSelect');
-        select.innerHTML = '<option value="">--- انتخاب ستون هدف ---</option>';
+        select.innerHTML = '<option value="">🎯 انتخاب ستون برای استخراج...</option>';
         headers.forEach((h, i) => {
             const opt = document.createElement('option');
-            opt.value = i; opt.textContent = h || `ستون ${i+1}`;
+            opt.value = i;
+            opt.textContent = h || `ستون ${i+1}`;
             select.appendChild(opt);
         });
+
+        document.getElementById('uploadWrapper').style.display = 'none';
         document.getElementById('selectionStep').style.display = 'block';
     });
 
+    // هندل انتخاب ستون
     document.getElementById('columnSelect').addEventListener('change', function() {
         const colIdx = this.value;
-        if (colIdx === "") return;
+        if (!colIdx) return;
 
-        rows = window.fullData.slice(1).map(r => r[colIdx]).filter(c => c !== undefined && c !== "");
+        fullRows = window.rawJson.slice(1).map(r => r[colIdx]).filter(c => c !== undefined && c !== "");
         
-        // اگر ردیف ذخیره شده بیشتر از تعداد ردیف‌های فایل جدید باشد، صفرش کن
-        if (currentIndex >= rows.length) currentIndex = 0;
+        if (currentIndex >= fullRows.length) currentIndex = 0;
 
-        document.getElementById('totalRowsText').innerText = `کل: ${rows.length}`;
+        document.getElementById('selectionStep').style.display = 'none';
         document.getElementById('controlPanel').style.display = 'block';
+        document.getElementById('totalInfo').innerText = `کل: ${fullRows.length} ردیف`;
         updateUI();
     });
 
     function updateUI() {
-        const totalChunks = Math.ceil(rows.length / CHUNK_SIZE);
-        const currentPart = Math.floor(currentIndex / CHUNK_SIZE) + 1;
-        document.getElementById('progressText').innerText = `بخش ${currentPart} از ${totalChunks}`;
+        const totalParts = Math.ceil(fullRows.length / CHUNK);
+        const currentPart = Math.floor(currentIndex / CHUNK) + 1;
+        document.getElementById('chunkInfo').innerText = `بخش ${currentPart} از ${totalParts}`;
         
-        const progress = (currentIndex / rows.length) * 100;
-        document.getElementById('progressBar').style.width = `${progress}%`;
+        const perc = (currentIndex / fullRows.length) * 100;
+        document.getElementById('progressBar').style.width = `${perc}%`;
 
-        const end = Math.min(currentIndex + CHUNK_SIZE, rows.length);
-        document.getElementById('copyBtn').innerText = `کپی ردیف ${currentIndex + 1} تا ${end}`;
+        const end = Math.min(currentIndex + CHUNK, fullRows.length);
+        document.getElementById('copyBtn').innerText = `📋 کپی ردیف ${currentIndex + 1} تا ${end}`;
         
-        const sample = rows.slice(currentIndex, currentIndex + 2).join(', ');
-        document.getElementById('preview').innerText = `آماده: ${sample}...`;
+        const preview = fullRows.slice(currentIndex, currentIndex + 2).join(' | ');
+        document.getElementById('previewBox').innerText = `آماده سازی محتوا: ${preview}...`;
     }
 
+    // عملیات کپی
     document.getElementById('copyBtn').addEventListener('click', () => {
-        const end = Math.min(currentIndex + CHUNK_SIZE, rows.length);
-        const chunk = rows.slice(currentIndex, end).join('\n');
+        const end = Math.min(currentIndex + CHUNK, fullRows.length);
+        const textToCopy = fullRows.slice(currentIndex, end).join('\n');
 
-        navigator.clipboard.writeText(chunk).then(() => {
+        navigator.clipboard.writeText(textToCopy).then(() => {
             const btn = document.getElementById('copyBtn');
             btn.innerText = "کپی شد! ✅";
-            btn.classList.add('copied');
+            btn.classList.add('success');
 
             setTimeout(() => {
-                btn.classList.remove('copied');
-                if (end < rows.length) {
-                    currentIndex += CHUNK_SIZE;
-                    // ذخیره در حافظه گوشی
-                    localStorage.setItem('excel_index', currentIndex);
+                btn.classList.remove('success');
+                if (end < fullRows.length) {
+                    currentIndex += CHUNK;
+                    localStorage.setItem('last_idx', currentIndex);
                     updateUI();
                 } else {
-                    btn.innerText = "پایان فایل 🎉";
-                    localStorage.removeItem('excel_index');
+                    btn.innerText = "تمام ردیف‌ها کپی شدند 🎉";
+                    localStorage.removeItem('last_idx');
                 }
             }, 1000);
         });
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        if (confirm("آیا مطمئن هستید که می‌خواهید تمام پیشرفت‌ها پاک شود؟")) {
-            localStorage.removeItem('excel_index');
+    // دکمه حذف فایل و بازنشانی
+    document.getElementById('deleteFile').addEventListener('click', () => {
+        if(confirm("آیا فایل فعلی حذف شود و به منوی آپلود بازگردید؟")) {
+            localStorage.removeItem('last_idx');
             location.reload();
         }
     });
