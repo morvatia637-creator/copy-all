@@ -93,6 +93,51 @@
         .preview-box .pv-type { color: #475569; font-size: 10px; }
         .preview-box .pv-head { color: #818cf8; font-weight: bold; margin-bottom: 4px; display: block; font-family: 'Vazirmatn'; font-size: 11px; direction: rtl; }
         footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
+
+        /* صفحه رمز عبور */
+        .lock-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .lock-box {
+            background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 28px; padding: 40px 30px; width: 300px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+        }
+        .lock-box h2 {
+            margin: 0 0 8px 0; font-size: 18px;
+            background: linear-gradient(to left, #818cf8, #c084fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+        .lock-box p { color: #64748b; font-size: 12px; margin: 0 0 24px 0; }
+        .lock-box input[type="password"] {
+            width: 100%; padding: 14px; background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1); color: white;
+            border-radius: 14px; font-family: 'Vazirmatn'; font-size: 16px;
+            outline: none; text-align: center; letter-spacing: 4px;
+            margin-bottom: 12px;
+        }
+        .lock-box input[type="password"]::placeholder { letter-spacing: 0; font-size: 13px; color: #475569; }
+        .lock-box input[type="password"].shake {
+            animation: shake 0.4s ease;
+            border-color: #ef4444;
+        }
+        .lock-btn {
+            background: linear-gradient(135deg, #6366f1, #c084fc);
+            color: white; border: none; width: 100%; padding: 14px;
+            border-radius: 14px; font-size: 14px; font-weight: bold;
+            cursor: pointer; font-family: 'Vazirmatn'; transition: 0.2s;
+        }
+        .lock-btn:active { transform: scale(0.97); }
+        .lock-error { color: #ef4444; font-size: 12px; margin-top: 10px; height: 16px; }
+        @keyframes shake {
+            0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+            40%{transform:translateX(8px)} 60%{transform:translateX(-6px)}
+            80%{transform:translateX(6px)}
+        }
         .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 12px; cursor: pointer; }
 
         /* لیست فایل‌های ترکیب */
@@ -108,6 +153,17 @@
     </style>
 </head>
 <body>
+<!-- صفحه قفل -->
+<div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+        <h2>Excel Pro Suite</h2>
+        <p>برای ورود رمز عبور را وارد کنید</p>
+        <input type="password" id="pwdInput" placeholder="رمز عبور" onkeydown="if(event.key==='Enter') checkPassword()">
+        <button class="lock-btn" onclick="checkPassword()">🔓 ورود</button>
+        <div class="lock-error" id="lockError"></div>
+    </div>
+</div>
+
 <div class="container">
     <header><h1>Excel Pro Suite</h1></header>
     <div class="tabs">
@@ -977,6 +1033,33 @@ function resetNid() {
     document.getElementById('nidWarn').style.display = 'none';
     document.getElementById('btnNid').disabled = true;
 }
+
+// ===== رمز عبور =====
+// برای تغییر رمز، مقدار زیر را عوض کنید:
+const APP_PASSWORD = 'excel1404';
+
+function checkPassword() {
+    const input = document.getElementById('pwdInput');
+    const error = document.getElementById('lockError');
+    const val = input.value;
+
+    if (val === APP_PASSWORD) {
+        document.getElementById('lockScreen').style.display = 'none';
+        // ذخیره در session تا بعد از رفرش دوباره نپرسه
+        sessionStorage.setItem('unlocked', '1');
+    } else {
+        error.textContent = '❌ رمز اشتباه است';
+        input.classList.add('shake');
+        input.value = '';
+        setTimeout(() => { input.classList.remove('shake'); error.textContent = ''; }, 1500);
+    }
+}
+
+// اگر قبلاً در این session باز شده، مستقیم نشون بده
+if (sessionStorage.getItem('unlocked') === '1') {
+    document.getElementById('lockScreen').style.display = 'none';
+}
+
 </script>
 </body>
 </html>
