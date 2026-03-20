@@ -327,29 +327,61 @@
 // ===== ابزار مشترک =====
 // تابع قوی برای خواندن فایل‌های اکسل از جمله فایل‌های خراب یا غیراستاندارد
 async function readExcelFile(file) {
-    const arrayBuf = await file.arrayBuffer();
-    const attempts = [
-        () => XLSX.read(arrayBuf, {header:1, raw:true}),
-        () => XLSX.read(arrayBuf, {header:1, raw:true, cellNF:false, cellHTML:false}),
-        () => XLSX.read(arrayBuf, {header:1, raw:true, WTF:false, cellStyles:false, cellDates:false}),
-        () => XLSX.read(arrayBuf, {header:1, raw:false}),
-    ];
-    for (const attempt of attempts) {
-        try {
-            const wb = attempt();
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            if (!sheet) continue;
-            const data = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:''});
-            if (data && data.length > 0) return data;
-        } catch(e) { continue; }
+
+    // تابع کمکی: تبدیل wb به data
+    function wbToData(wb) {
+        if (!wb || !wb.SheetNames || !wb.SheetNames.length) return null;
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        if (!sheet) return null;
+        const data = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:''});
+        return (data && data.length > 0) ? data : null;
     }
-    // آخرین تلاش: خواندن به صورت متن (CSV)
+
+    // روش ۱: ArrayBuffer معمولی
+    try {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, {type:'array', cellStyles:false, cellNF:false, cellHTML:false, WTF:false});
+        const d = wbToData(wb); if (d) return d;
+    } catch(e) {}
+
+    // روش ۲: Binary String — بهترین روش برای فایل‌های قدیمی و خراب
+    try {
+        const bstr = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = e => res(e.target.result);
+            r.onerror = rej;
+            r.readAsBinaryString(file);
+        });
+        const wb = XLSX.read(bstr, {type:'binary', cellStyles:false, cellNF:false, WTF:false});
+        const d = wbToData(wb); if (d) return d;
+    } catch(e) {}
+
+    // روش ۳: Base64
+    try {
+        const b64 = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = e => res(e.target.result.split(',')[1]);
+            r.onerror = rej;
+            r.readAsDataURL(file);
+        });
+        const wb = XLSX.read(b64, {type:'base64', cellStyles:false, WTF:false});
+        const d = wbToData(wb); if (d) return d;
+    } catch(e) {}
+
+    // روش ۴: ArrayBuffer با raw:false
+    try {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, {type:'array', raw:false, cellDates:false});
+        const d = wbToData(wb); if (d) return d;
+    } catch(e) {}
+
+    // روش ۵: خواندن به صورت متن (CSV یا TSV)
     try {
         const text = await file.text();
         const wb = XLSX.read(text, {type:'string'});
-        const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''});
-        if (data && data.length > 0) return data;
+        const d = wbToData(wb); if (d) return d;
     } catch(e) {}
+
     return null;
 }
 
