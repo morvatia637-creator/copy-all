@@ -174,6 +174,7 @@
         <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
         <button class="tab-btn" onclick="openTab('nidTab',this)">🪪 کدملی</button>
         <button class="tab-btn" onclick="openTab('intersectTab',this)">🔍 اشتراک</button>
+        <button class="tab-btn" onclick="openTab('dedupTab',this)">🧹 حذف تکراری</button>
     </div>
 
     <!-- تب اول -->
@@ -359,6 +360,34 @@
         <div class="result-box" id="intResult"></div>
         <div class="warn-box" id="intWarn"></div>
         <button onclick="resetIntersect()" class="reset-btn">❌ شروع مجدد</button>
+    </div>
+
+    <!-- تب هشتم: حذف تکراری -->
+    <div id="dedupTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • فایل اکسل را آپلود کنید.<br>
+            • یک یا چند ستون برای تشخیص تکراری انتخاب کنید.<br>
+            • انتخاب کنید کدام نسخه نگه داشته شود: <b>اول</b> یا <b>آخر</b>.<br>
+            • فایل پاکسازی‌شده دانلود می‌شود.
+        </div>
+        <div class="upload-section" id="dedupUpArea">
+            <span style="font-size:30px;">🧹</span><br>
+            <span id="dedupSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleDedupFile(this)">
+        </div>
+        <div id="dedupControls" style="display:none;">
+            <p class="section-label">ستون‌های تشخیص تکراری:</p>
+            <select id="dedupCols" multiple style="height:100px; font-size:12px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); color:white; border-radius:14px; width:100%; padding:8px; font-family:Vazirmatn; margin-top:6px;"></select>
+            <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">برای انتخاب چند ستون Ctrl نگه دارید</small>
+            <p class="section-label">کدام نسخه نگه داشته شود؟</p>
+            <select id="dedupKeep">
+                <option value="first">اولین ردیف (نگه داشتن اول)</option>
+                <option value="last">آخرین ردیف (نگه داشتن آخر)</option>
+            </select>
+            <button id="btnDedup" class="main-btn" onclick="doDedup()">🧹 حذف تکراری و دانلود</button>
+            <div class="result-box" id="dedupResult"></div>
+            <button onclick="resetDedup()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
     </div>
 </div>
 
@@ -1330,6 +1359,77 @@ function resetIntersect() {
     document.getElementById('intSt2').textContent = 'انتخاب فایل دوم';
     ['intResult','intWarn'].forEach(id => document.getElementById(id).style.display='none');
     document.getElementById('btnInt').disabled = true;
+}
+
+// ===== تب هشتم: حذف تکراری =====
+let dedupRawData = null;
+
+async function handleDedupFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+    dedupRawData = data;
+    const headers = data[0] || [];
+    const sel = document.getElementById('dedupCols');
+    sel.innerHTML = '';
+    headers.forEach((h,i) => {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = h || 'ستون '+(i+1);
+        sel.appendChild(opt);
+    });
+    document.getElementById('dedupUpArea').style.display = 'none';
+    document.getElementById('dedupSt').textContent = '✅ ' + file.name;
+    document.getElementById('dedupControls').style.display = 'block';
+}
+
+function doDedup() {
+    const sel = document.getElementById('dedupCols');
+    const keyCols = Array.from(sel.selectedOptions).map(o => parseInt(o.value));
+    if (keyCols.length === 0) { alert('لطفاً حداقل یک ستون انتخاب کنید'); return; }
+
+    const keep = document.getElementById('dedupKeep').value;
+    const btn  = document.getElementById('btnDedup');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const headers = dedupRawData[0];
+    const rows = dedupRawData.slice(1).filter(r =>
+        r.some(c => c !== null && c !== undefined && String(c).trim() !== '')
+    );
+
+    const makeKey = row => keyCols.map(c => normalizeKey(row[c])).join('|____|');
+
+    const seen = new Map();
+    if (keep === 'first') {
+        rows.forEach((row, i) => { const k = makeKey(row); if (!seen.has(k)) seen.set(k, i); });
+    } else {
+        rows.forEach((row, i) => { const k = makeKey(row); seen.set(k, i); });
+    }
+
+    const keptIndices = new Set(seen.values());
+    const outRows = rows.filter((_, i) => keptIndices.has(i));
+    const removedCount = rows.length - outRows.length;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...outRows]), 'Deduped');
+    XLSX.writeFile(wb, 'Deduped_Result.xlsx');
+
+    const r = document.getElementById('dedupResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل آماده شد!<br>
+        🗑️ ردیف‌های تکراری حذف‌شده: <b>${removedCount}</b><br>
+        🟢 ردیف‌های باقی‌مانده: <b>${outRows.length}</b><br>
+        📊 ستون‌های بررسی‌شده: <b>${keyCols.map(c => headers[c]||'ستون '+(c+1)).join('، ')}</b>`;
+
+    btn.innerText = '✅ دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText='🧹 حذف تکراری و دانلود'; btn.classList.remove('success'); btn.disabled=false; }, 3000);
+}
+
+function resetDedup() {
+    dedupRawData = null;
+    document.getElementById('dedupUpArea').style.display = 'block';
+    document.getElementById('dedupSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('dedupControls').style.display = 'none';
+    document.getElementById('dedupResult').style.display = 'none';
 }
 
 </script>
