@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Master | هوشمند و حرفه‌ای</title>
+    <title>Excel Pro Master v6</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root {
-            --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc;
-            --success: #10b981; --danger: #ef4444; --bg: #0f172a;
-            --glass: rgba(30, 41, 59, 0.85); --border: rgba(255, 255, 255, 0.1);
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Vazirmatn', sans-serif; }
+        :root { --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc; --success: #10b981; --danger: #ef4444; --bg: #0f172a; --glass: rgba(30, 41, 59, 0.85); --border: rgba(255, 255, 255, 0.1); }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; }
         body { background: radial-gradient(circle at top right, #1e1b4b, #0f172a); color: #f1f5f9; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; }
         .container { width: 100%; max-width: 500px; background: var(--glass); backdrop-filter: blur(16px); border-radius: 32px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         .tabs { display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 6px; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
@@ -23,15 +19,15 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         header h1 { font-size: 24px; margin: 0 0 20px; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
         .info-box { background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--primary); border-radius: 18px; padding: 15px; margin-bottom: 20px; font-size: 12px; line-height: 1.7; color: #cbd5e1; }
-        .upload-card { background: rgba(15, 23, 42, 0.4); border: 2px dashed #334155; border-radius: 20px; padding: 25px 15px; text-align: center; position: relative; transition: 0.3s; margin-bottom: 10px; }
+        .upload-card { background: rgba(15, 23, 42, 0.4); border: 2px dashed #334155; border-radius: 20px; padding: 25px 15px; text-align: center; position: relative; transition: 0.3s; }
         .upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .upload-card.loaded { border-color: var(--success); background: rgba(16, 185, 129, 0.05); border-style: solid; }
         select { width: 100%; padding: 12px; background: #1e293b; border: 1px solid var(--border); color: white; border-radius: 12px; margin: 8px 0; outline: none; font-size: 13px; border-right: 4px solid var(--primary); }
         .main-btn { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
         .bar-bg { background: #334155; height: 10px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
         .bar-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.5s; }
+        .label-sm { font-size: 11px; color: var(--primary); margin-top: 10px; display: block; }
         footer { margin-top: 30px; text-align: center; font-size: 11px; color: #64748b; }
-        .label-sm { font-size: 11px; color: var(--primary); margin-right: 5px; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -46,55 +42,36 @@
 
     <!-- تب کپی ۷۰۰۰ تایی -->
     <div id="copyTab" class="tab-content active">
-        <div id="copyResume" class="info-box" style="display:none;">⏳ <b>بازیابی:</b> فایل را انتخاب کنید تا از <b>ردیف <span id="savedIdx">0</span></b> ادامه دهید.</div>
-        <div class="upload-card" id="copyCard">
-            <span style="font-size:30px">📂</span><br>
-            <span id="copyStatus">انتخاب فایل اصلی</span>
-            <input type="file" id="copyFile" accept=".xlsx, .xls">
-        </div>
+        <div id="copyResume" class="info-box" style="display:none;">⏳ بازیابی: ردیف <span id="savedIdx">0</span></div>
+        <div class="upload-card" id="copyCard">📂 <span id="copyStatus">انتخاب فایل اصلی</span><input type="file" id="copyFile" accept=".xlsx, .xls"></div>
         <div id="copyStep2" style="display:none;">
-            <span class="label-sm">ستون هدف کپی:</span>
+            <span class="label-sm">ستون هدف:</span>
             <select id="copyColSelect"></select>
             <div id="copyControls" style="display:none;">
                 <div class="bar-bg"><div id="copyBar" class="bar-fill"></div></div>
-                <button id="copyBtn" class="main-btn">📋 کپی ردیف‌های اول</button>
-                <button onclick="localStorage.clear();location.reload();" style="background:transparent; color:var(--danger); border:none; width:100%; margin-top:10px; font-size:11px; cursor:pointer;">❌ بازنشانی کل سیستم</button>
+                <button id="copyBtn" class="main-btn">📋 کپی ۷۰۰۰ تای بعدی</button>
+                <button onclick="localStorage.clear();location.reload();" style="background:none;color:var(--danger);border:none;width:100%;margin-top:10px;cursor:pointer;font-size:11px">❌ بازنشانی</button>
             </div>
         </div>
     </div>
 
     <!-- تب ادغام Vlookup -->
     <div id="mergeTab" class="tab-content">
-        <div class="info-box">
-            <b>💡 سیستم ادغام هوشمند:</b><br>
-            این بخش فقط ردیف‌هایی از فایل دوم را ترکیب می‌کند که دارای <b>شماره موبایل معتبر</b> باشند. شماره‌ها به صورت خودکار به فرمت استاندارد (0916...) تبدیل می‌شوند.
-        </div>
-
-        <div class="upload-card" id="cardA">
-            <span id="statusA">📁 انتخاب فایل اول (پایه)</span>
-            <input type="file" id="fileA" accept=".xlsx, .xls">
-        </div>
-        <span id="labelA" class="label-sm" style="display:none;">ستون مشترک در فایل اول:</span>
+        <div class="info-box">فقط ردیف‌هایی از فایل مرجع که <b>شماره موبایل معتبر</b> (تبدیل به 09...) داشته باشند ادغام می‌شوند.</div>
+        <div class="upload-card" id="cardA">📁 <span id="statusA">انتخاب فایل اول (پایه)</span><input type="file" id="fileA" accept=".xlsx, .xls"></div>
         <select id="colA" style="display:none;"></select>
-
-        <div class="upload-card" id="cardB" style="margin-top:20px;">
-            <span id="statusB">📁 انتخاب فایل دوم (مرجع)</span>
-            <input type="file" id="fileB" accept=".xlsx, .xls">
-        </div>
-        <span id="labelB1" class="label-sm" style="display:none;">ستون مشترک در فایل دوم:</span>
+        <div class="upload-card" id="cardB" style="margin-top:20px;">📁 <span id="statusB">انتخاب فایل دوم (مرجع)</span><input type="file" id="fileB" accept=".xlsx, .xls"></div>
         <select id="colB" style="display:none;"></select>
-        <span id="labelB2" class="label-sm" style="display:none;">ستون شماره تلفن در فایل دوم:</span>
+        <span id="lblPhoneB" class="label-sm" style="display:none;">ستون شماره تلفن در فایل دوم:</span>
         <select id="colPhoneB" style="display:none;"></select>
-
-        <button id="mergeBtn" class="main-btn" style="display:none;">🧬 شروع ادغام هوشمند و دانلود</button>
-        <p id="mergeLog" style="text-align:center; font-size:11px; margin-top:15px; color:var(--success);"></p>
+        <button id="mergeBtn" class="main-btn" style="display:none;">🧬 شروع ادغام هوشمند</button>
+        <p id="mergeLog" style="text-align:center; font-size:11px; margin-top:15px; color:var(--success); line-height:1.5;"></p>
     </div>
 </div>
 
-<footer>توسعه یافته برای مدیریت حرفه‌ای اکسل در موبایل</footer>
+<footer>توسعه توسط تیم اکسل پرو</footer>
 
 <script>
-    // --- مدیریت تب‌ها ---
     function switchTab(id) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -102,149 +79,120 @@
         event.currentTarget.classList.add('active');
     }
 
-    // --- استانداردسازی شماره موبایل ---
     function normalizePhone(val) {
-        let p = String(val).replace(/\D/g, ''); // فقط اعداد
+        if(!val) return null;
+        let p = String(val).trim().replace(/\D/g, ''); 
         if (p.startsWith('98')) p = '0' + p.substring(2);
         if (p.startsWith('9') && p.length === 10) p = '0' + p;
         if (p.startsWith('0098')) p = '0' + p.substring(4);
-        // اگر شماره با 09 شروع شود و 11 رقم باشد معتبر است
         return (p.startsWith('09') && p.length === 11) ? p : null;
     }
 
-    // --- بخش کپی ۷۰۰۰ تایی ---
+    // --- کپی ۷۰۰۰ تایی ---
     let cRows = [], cIdx = 0;
     const CHUNK = 7000;
-
     window.onload = () => {
-        const saved = localStorage.getItem('last_p_idx');
-        if (saved && parseInt(saved) > 0) {
-            document.getElementById('copyResume').style.display = 'block';
-            document.getElementById('savedIdx').innerText = parseInt(saved) + 1;
-            cIdx = parseInt(saved);
-        }
+        const saved = localStorage.getItem('l_idx');
+        if (saved) { document.getElementById('copyResume').style.display='block'; document.getElementById('savedIdx').innerText=parseInt(saved)+1; cIdx=parseInt(saved); }
     };
-
     document.getElementById('copyFile').addEventListener('change', async (e) => {
-        const data = await e.target.files[0].arrayBuffer();
-        const wb = XLSX.read(data);
-        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-        window.cRaw = json;
+        const wb = XLSX.read(await e.target.files[0].arrayBuffer());
+        window.cRaw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
         const sel = document.getElementById('copyColSelect');
         sel.innerHTML = '<option value="">--- انتخاب ستون ---</option>';
-        json[0].forEach((h, i) => { sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`; });
-        document.getElementById('copyStep2').style.display = 'block';
+        window.cRaw[0].forEach((h, i) => { sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`; });
+        document.getElementById('copyStep2').style.display='block';
         document.getElementById('copyCard').classList.add('loaded');
         document.getElementById('copyStatus').innerText = e.target.files[0].name;
     });
-
     document.getElementById('copyColSelect').addEventListener('change', function() {
-        if (!this.value) return;
         cRows = window.cRaw.slice(1).map(r => r[this.value]).filter(c => c);
-        document.getElementById('copyControls').style.display = 'block';
+        document.getElementById('copyControls').style.display='block';
         updateCUI();
     });
-
     function updateCUI() {
         document.getElementById('copyBar').style.width = `${(cIdx / cRows.length) * 100}%`;
         const end = Math.min(cIdx + CHUNK, cRows.length);
         document.getElementById('copyBtn').innerText = `📋 کپی ردیف ${cIdx+1} تا ${end}`;
     }
-
     document.getElementById('copyBtn').addEventListener('click', () => {
         const end = Math.min(cIdx + CHUNK, cRows.length);
-        const txt = cRows.slice(cIdx, end).join('\n');
-        navigator.clipboard.writeText(txt).then(() => {
-            if (end < cRows.length) {
-                cIdx += CHUNK; localStorage.setItem('last_p_idx', cIdx); updateCUI();
-            } else {
-                alert("پایان فایل!"); localStorage.removeItem('last_p_idx');
-            }
+        navigator.clipboard.writeText(cRows.slice(cIdx, end).join('\n')).then(() => {
+            if (end < cRows.length) { cIdx += CHUNK; localStorage.setItem('l_idx', cIdx); updateCUI(); }
+            else { alert("تمام شد!"); localStorage.removeItem('l_idx'); }
         });
     });
 
-    // --- بخش ادغام (VLOOKUP) ---
+    // --- ادغام (VLOOKUP) ---
     let dA = null, dB = null;
-
     async function loadMFile(e, stId, cardId, type) {
         const file = e.target.files[0];
-        if (!file) return;
-        document.getElementById(stId).innerText = "⏳ در حال تحلیل...";
-        const data = await file.arrayBuffer();
-        const wb = XLSX.read(data);
+        const wb = XLSX.read(await file.arrayBuffer());
         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-        
-        if(type === 'A') {
-            dA = json;
-            fillSelect('colA', json[0]);
-            document.getElementById('labelA').style.display = 'block';
-        } else {
-            dB = json;
-            fillSelect('colB', json[0]);
-            fillSelect('colPhoneB', json[0]);
-            document.getElementById('labelB1').style.display = 'block';
-            document.getElementById('labelB2').style.display = 'block';
-        }
+        if(type === 'A') { dA = json; fillS('colA', json[0]); } 
+        else { dB = json; fillS('colB', json[0]); fillS('colPhoneB', json[0]); document.getElementById('lblPhoneB').style.display='block'; }
         document.getElementById(stId).innerText = `✅ ${file.name}`;
         document.getElementById(cardId).classList.add('loaded');
-        if(dA && dB) document.getElementById('mergeBtn').style.display = 'block';
+        if(dA && dB) document.getElementById('mergeBtn').style.display='block';
     }
-
-    function fillSelect(id, headers) {
-        const s = document.getElementById(id);
-        s.innerHTML = '<option value="">--- انتخاب کنید ---</option>';
-        headers.forEach((h, i) => { s.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`; });
-        s.style.display = 'block';
+    function fillS(id, h) {
+        const s = document.getElementById(id); s.style.display='block';
+        s.innerHTML = '<option value="">--- انتخاب ستون ---</option>';
+        h.forEach((name, i) => { s.innerHTML += `<option value="${i}">${name || 'ستون '+(i+1)}</option>`; });
     }
-
     document.getElementById('fileA').addEventListener('change', (e) => loadMFile(e, 'statusA', 'cardA', 'A'));
     document.getElementById('fileB').addEventListener('change', (e) => loadMFile(e, 'statusB', 'cardB', 'B'));
 
     document.getElementById('mergeBtn').addEventListener('click', () => {
-        const kA = document.getElementById('colA').value;
-        const kB = document.getElementById('colB').value;
-        const phB = document.getElementById('colPhoneB').value;
+        const kA = document.getElementById('colA').value, kB = document.getElementById('colB').value, phB = document.getElementById('colPhoneB').value;
         const log = document.getElementById('mergeLog');
-
-        if (kA==="" || kB==="" || phB==="") { alert("لطفاً تمام ستون‌ها را انتخاب کنید."); return; }
-        log.innerText = "⏳ در حال ادغام و استانداردسازی شماره‌ها...";
-
+        if (kA==="" || kB==="" || phB==="") return alert("تمام ستون‌ها را انتخاب کنید.");
+        
+        log.innerText = "⏳ در حال پردازش...";
         setTimeout(() => {
             try {
-                // ۱. فایل دوم را به نقشه تبدیل کن (فقط ردیف‌های دارای شماره معتبر)
                 const mapB = new Map();
-                const headersB = dB[0];
+                const hB = dB[0];
+                let validPhonesCount = 0;
 
+                // ۱. آماده‌سازی نقشه فایل دوم
                 dB.slice(1).forEach(row => {
-                    const originalPhone = row[phB];
-                    const validPhone = normalizePhone(originalPhone);
-                    
-                    if (validPhone && row[kB]) {
-                        // جایگزین کردن شماره اصلی با شماره استاندارد
-                        const updatedRow = [...row];
-                        updatedRow[phB] = validPhone;
-                        mapB.set(String(row[kB]).trim(), updatedRow);
+                    const phone = normalizePhone(row[phB]);
+                    if (phone && row[kB]) {
+                        const newRow = [...row];
+                        newRow[phB] = phone; // ذخیره شماره تمیز شده
+                        mapB.set(String(row[kB]).trim().toLowerCase(), newRow);
+                        validPhonesCount++;
                     }
                 });
 
-                // ۲. ادغام
-                const result = [[...dA[0], ...headersB]];
+                // ۲. ادغام ردیف‌ها
+                const hA = dA[0];
+                const res = [[...hA, ...hB]];
+                let matches = 0;
+
                 dA.slice(1).forEach(rowA => {
-                    const keyVal = String(rowA[kA] || "").trim();
-                    const matchB = mapB.get(keyVal);
-                    if (matchB) {
-                        result.push([...rowA, ...matchB]);
+                    // تراز کردن ردیف فایل اول به طول هدر (جلوگیری از جابجایی ستون‌ها)
+                    const paddedRowA = Array.from({length: hA.length}, (_, i) => rowA[i] !== undefined ? rowA[i] : "");
+                    
+                    const key = String(rowA[kA] || "").trim().toLowerCase();
+                    const rowB = mapB.get(key);
+                    
+                    if (rowB) {
+                        res.push([...paddedRowA, ...rowB]);
+                        matches++;
                     } else {
-                        result.push([...rowA, ...new Array(headersB.length).fill("")]);
+                        // اگر پیدا نشد، ستون‌های فایل دوم را خالی بگذار
+                        res.push([...paddedRowA, ...new Array(hB.length).fill("")]);
                     }
                 });
 
-                // ۳. دانلود
+                // ۳. خروجی
                 const nWb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(nWb, XLSX.utils.aoa_to_sheet(result), "MergedData");
-                XLSX.writeFile(nWb, "Standard_Merged_Excel.xlsx");
-                log.innerText = "✅ عملیات موفق! فایل دانلود شد.";
-            } catch (err) { log.innerText = "❌ خطا در پردازش داده‌ها."; console.error(err); }
+                XLSX.utils.book_append_sheet(nWb, XLSX.utils.aoa_to_sheet(res), "Merged");
+                XLSX.writeFile(nWb, "Merged_Data.xlsx");
+                log.innerHTML = `✅ عملیات موفق!<br>تعداد شماره معتبر در مرجع: ${validPhonesCount}<br>تعداد موارد ادغام شده: ${matches}`;
+            } catch (err) { log.innerText = "❌ خطا در پردازش."; console.error(err); }
         }, 500);
     });
 </script>
