@@ -116,6 +116,7 @@
         <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام فایل‌ها</button>
         <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب فایل‌ها</button>
         <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
+        <button class="tab-btn" onclick="openTab('nidTab',this)">🪪 کدملی</button>
     </div>
 
     <!-- تب اول -->
@@ -238,7 +239,33 @@
             <button onclick="resetSplit()" class="reset-btn">❌ شروع مجدد</button>
         </div>
     </div>
-</div>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
+
+    <!-- تب ششم: تفکیک کدملی -->
+    <div id="nidTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • فایل اکسل را آپلود کنید و ستون کدملی را انتخاب کنید.<br>
+            • یک فایل <b>ZIP</b> دریافت می‌کنید.<br>
+            • داخل ZIP: هر استان یک <b>پوشه</b> دارد.<br>
+            • داخل هر پوشه: یک فایل کلی استان + فایل جداگانه هر شهر.
+        </div>
+        <div id="nidDbStatus" class="warn-box" style="display:none;"></div>
+        <div class="upload-section" id="nidUpArea">
+            <span style="font-size:30px;">🪪</span><br>
+            <span id="nidSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleNidFile(this)">
+        </div>
+        <div id="nidControls" style="display:none;">
+            <p class="section-label">ستون کدملی:</p>
+            <select id="nidCol" onchange="checkNidReady()"></select>
+            <button id="btnNid" class="main-btn" onclick="doNidSplit()" disabled>🪪 تفکیک و دانلود ZIP</button>
+            <div class="result-box" id="nidResult"></div>
+            <div class="warn-box" id="nidWarn"></div>
+            <button onclick="resetNid()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+</div>
+
+<footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
 
 <script>
 // ===== ابزار مشترک =====
@@ -805,6 +832,174 @@ function resetMerge() {
     document.getElementById('mergeSt2').textContent='انتخاب فایل دوم';
     ['mergeResult','mergeWarn','preview1','preview2key','preview2phone'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('btnMerge').disabled=true;
+}
+
+// ===== تب ششم: تفکیک کدملی =====
+let nidDB = null;       // دیتابیس کدهای ملی: {"001":{province,city}, ...}
+let nidRawData = null;  // داده فایل اکسل
+
+// بارگذاری دیتابیس از gist هنگام باز کردن تب
+async function loadNidDB() {
+    if (nidDB) return true;
+    const statusEl = document.getElementById('nidDbStatus');
+    statusEl.style.display = 'block';
+    statusEl.textContent = '⏳ در حال بارگذاری دیتابیس کدملی...';
+    try {
+        // استفاده از proxy عمومی برای دور زدن CORS
+        const url = 'https://cdn.jsdelivr.net/gh/Gictorbit/a1cf425041b90ffb15fa11343a752f2f@187097bc/iran-nationalcode-location.json';
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('خطا در دریافت');
+        nidDB = await res.json();
+        statusEl.style.display = 'none';
+        return true;
+    } catch(e) {
+        // اگر CDN کار نکرد، از raw.githubusercontent امتحان کن
+        try {
+            const res2 = await fetch('https://raw.githubusercontent.com/Gictorbit/a1cf425041b90ffb15fa11343a752f2f/187097bc30d596cb6f82980aa1f6fe7fc502ee71/iran-nationalcode-location.json');
+            if (!res2.ok) throw new Error('خطا');
+            nidDB = await res2.json();
+            statusEl.style.display = 'none';
+            return true;
+        } catch(e2) {
+            statusEl.textContent = '⚠️ خطا در بارگذاری دیتابیس. لطفاً اتصال اینترنت را بررسی کنید.';
+            return false;
+        }
+    }
+}
+
+// نرمال‌سازی کدملی: حذف فاصله، تبدیل ارقام فارسی، پد کردن به 10 رقم
+function normalizeNid(val) {
+    if (val === null || val === undefined) return '';
+    let s = String(val);
+    s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+    s = s.replace(/\D/g, '').trim();
+    // اگر کمتر از 10 رقم بود پد کن (بعضی اکسل‌ها صفر ابتدایی را حذف می‌کنند)
+    s = s.padStart(10, '0');
+    return s;
+}
+
+// تشخیص استان و شهر از کدملی
+function detectNidLocation(nid) {
+    if (!nidDB || nid.length !== 10) return null;
+    const code3 = nid.substring(0, 3);
+    const entry = nidDB[code3];
+    if (!entry || entry.province === '-') return null;
+    return { province: entry.province.trim(), city: entry.city.trim() };
+}
+
+async function handleNidFile(input) {
+    const file = input.files[0]; if (!file) return;
+
+    // بارگذاری دیتابیس
+    const ok = await loadNidDB();
+    if (!ok) return;
+
+    const wb = XLSX.read(await file.arrayBuffer());
+    nidRawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const headers = nidRawData[0] || [];
+    const sel = document.getElementById('nidCol');
+    sel.innerHTML = '<option value="">انتخاب ستون کدملی...</option>';
+    headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+    document.getElementById('nidUpArea').classList.add('uploaded');
+    document.getElementById('nidSt').textContent = '✅ ' + file.name;
+    document.getElementById('nidControls').style.display = 'block';
+}
+
+function checkNidReady() {
+    const v = document.getElementById('nidCol').value;
+    document.getElementById('btnNid').disabled = (v === '' || !nidDB);
+}
+
+async function doNidSplit() {
+    const colIdx = parseInt(document.getElementById('nidCol').value);
+    const btn = document.getElementById('btnNid');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const headers = nidRawData[0] || [];
+
+    // ساختار: { province: { city: [rows], '__all__': [rows] } }
+    const groups = {};
+    let unknownRows = [];
+    let invalidCount = 0;
+
+    for (let i = 1; i < nidRawData.length; i++) {
+        const row = nidRawData[i];
+        const hasData = row.some(c => c !== null && c !== undefined && String(c).trim() !== '');
+        if (!hasData) continue;
+
+        const nid = normalizeNid(row[colIdx]);
+        const loc = detectNidLocation(nid);
+
+        if (!loc) {
+            unknownRows.push(row);
+            if (nid.length !== 10 || nid === '0000000000') invalidCount++;
+            continue;
+        }
+
+        if (!groups[loc.province]) groups[loc.province] = { __all__: [] };
+        if (!groups[loc.province][loc.city]) groups[loc.province][loc.city] = [];
+        groups[loc.province][loc.city].push(row);
+        groups[loc.province].__all__.push(row);
+    }
+
+    // ساخت ZIP
+    const zip = new JSZip();
+
+    for (const province of Object.keys(groups).sort()) {
+        const provData = groups[province];
+        const folder = zip.folder(province);
+
+        // فایل کلی استان
+        const allRows = provData.__all__;
+        const wbAll = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wbAll, XLSX.utils.aoa_to_sheet([headers, ...allRows]), province.substring(0,31));
+        folder.file(`${province} - همه شهرها.xlsx`, XLSX.write(wbAll, {bookType:'xlsx', type:'array'}));
+
+        // فایل هر شهر
+        for (const city of Object.keys(provData).filter(k => k !== '__all__').sort()) {
+            const cityRows = provData[city];
+            const wbCity = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wbCity, XLSX.utils.aoa_to_sheet([headers, ...cityRows]), city.substring(0,31));
+            folder.file(`${city}.xlsx`, XLSX.write(wbCity, {bookType:'xlsx', type:'array'}));
+        }
+    }
+
+    // پوشه نامشخص
+    if (unknownRows.length > 0) {
+        const folder = zip.folder('نامشخص');
+        const wbU = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wbU, XLSX.utils.aoa_to_sheet([headers, ...unknownRows]), 'نامشخص');
+        folder.file('نامشخص.xlsx', XLSX.write(wbU, {bookType:'xlsx', type:'array'}));
+    }
+
+    const zipBlob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'تفکیک_کدملی.zip'; a.click();
+    URL.revokeObjectURL(url);
+
+    const totalKnown = Object.values(groups).reduce((s,p)=>s+p.__all__.length, 0);
+    const r = document.getElementById('nidResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل ZIP آماده شد!<br>
+        🗺️ تعداد استان‌ها: <b>${Object.keys(groups).length}</b><br>
+        🟢 ردیف‌های شناسایی‌شده: <b>${totalKnown}</b><br>
+        ⚪ ردیف‌های نامشخص: <b>${unknownRows.length}</b>`;
+
+    btn.innerText = '✅ ZIP دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText='🪪 تفکیک و دانلود ZIP'; btn.classList.remove('success'); btn.disabled=false; }, 3000);
+}
+
+function resetNid() {
+    nidRawData = null;
+    document.getElementById('nidUpArea').classList.remove('uploaded');
+    document.getElementById('nidSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('nidControls').style.display = 'none';
+    document.getElementById('nidCol').innerHTML = '';
+    document.getElementById('nidResult').style.display = 'none';
+    document.getElementById('nidWarn').style.display = 'none';
+    document.getElementById('btnNid').disabled = true;
 }
 </script>
 </body>
