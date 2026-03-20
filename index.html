@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Master | ادغام و Vlookup هوشمند</title>
+    <title>Excel Pro Master | دستیار کپی هوشمند</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- کتابخانه SheetJS برای کار با اکسل -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -20,39 +19,57 @@
             color: #f1f5f9; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;
         }
 
-        .container { width: 100%; max-width: 600px; background: var(--glass); backdrop-filter: blur(16px); border-radius: 32px; padding: 30px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .container { width: 100%; max-width: 480px; background: var(--glass); backdrop-filter: blur(16px); border-radius: 32px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); margin-bottom: 20px; }
 
-        header h1 { font-size: 26px; margin: 0; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
-        header p { color: #94a3b8; font-size: 14px; margin-top: 5px; text-align: center; margin-bottom: 25px; }
+        header h1 { font-size: 24px; margin: 0; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
+        header p { color: #94a3b8; font-size: 13px; margin-top: 5px; text-align: center; }
 
-        /* بخش آپلود دوگانه */
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .upload-box { border: 2px dashed #334155; border-radius: 20px; padding: 25px 15px; text-align: center; position: relative; transition: 0.3s; background: rgba(15, 23, 42, 0.4); }
-        .upload-box.active { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
-        .upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-        .upload-box span.icon { font-size: 35px; display: block; margin-bottom: 10px; }
-        .upload-box span.text { font-size: 13px; font-weight: bold; color: #cbd5e1; }
-        .upload-box span.filename { display: block; font-size: 11px; color: var(--success); margin-top: 8px; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* باکس بازیابی هوشمند */
+        .resume-banner {
+            background: rgba(99, 102, 241, 0.15); border: 1px dashed var(--primary); border-radius: 16px;
+            padding: 15px; margin-top: 20px; display: none; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+        .resume-banner h4 { margin: 0; color: var(--primary); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .resume-banner p { margin: 5px 0 0; font-size: 12px; color: #cbd5e1; line-height: 1.6; }
 
-        /* بخش انتخاب ستون ها */
-        .step-panel { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; display: none; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .step-panel h3 { margin: 0 0 15px 0; font-size: 15px; color: var(--primary); text-align: center; }
-        .select-group { margin-bottom: 15px; }
-        .select-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
-        select { width: 100%; padding: 12px; border-radius: 12px; background: #1e293b; color: #fff; border: 1px solid #334155; font-family: 'Vazirmatn'; outline: none; }
-        select:focus { border-color: var(--primary); }
+        /* باکس امکانات */
+        .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .feature-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 16px; border: 1px solid var(--border); text-align: center; }
+        .feature-item span { font-size: 20px; display: block; margin-bottom: 5px; }
+        .feature-item b { font-size: 11px; color: var(--primary); display: block; }
+        .feature-item p { font-size: 10px; color: #64748b; margin: 0; }
 
-        /* دکمه ها */
-        .btn-action { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: white; border: none; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn'; transition: 0.3s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
-        .btn-action:active { transform: scale(0.97); }
-        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        
-        .reset-btn { background: transparent; color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); width: 100%; padding: 12px; border-radius: 12px; margin-top: 10px; cursor: pointer; font-family: 'Vazirmatn'; transition: 0.3s; }
-        .reset-btn:hover { background: rgba(239, 68, 68, 0.1); }
+        /* آپلود */
+        .upload-section { margin: 20px 0; border: 2px dashed #334155; border-radius: 20px; padding: 35px 20px; transition: 0.3s; position: relative; background: rgba(15, 23, 42, 0.4); text-align: center; }
+        .upload-section:active { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+        .upload-section input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-        #statusText { text-align: center; font-size: 13px; color: var(--success); margin-top: 15px; display: none; font-weight: bold; }
+        /* پنل کنترل */
+        .control-panel { display: none; margin-top: 20px; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 8px; }
+        .bar-bg { background: #334155; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .btn-copy {
+            background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+            color: white; border: none; width: 100%; padding: 18px; border-radius: 18px;
+            font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn';
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); transition: 0.3s;
+        }
+        .btn-copy:active { transform: scale(0.96); }
+        .btn-copy.success { background: var(--success); }
+
+        .tools { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-tool { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: #f1f5f9; font-family: 'Vazirmatn'; font-size: 12px; cursor: pointer; }
+        .btn-danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+
+        /* فوتر */
+        footer { text-align: center; margin-top: 20px; padding-bottom: 20px; }
+        .dev-card { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 100px; font-size: 12px; color: #94a3b8; border: 1px solid var(--border); }
+        .dev-card b { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -60,192 +77,148 @@
 <div class="container">
     <header>
         <h1>Excel Pro Master</h1>
-        <p>ادغام هوشمند دو فایل اکسل (VLOOKUP)</p>
+        <p>دستیار استخراج هوشمند داده‌ها</p>
     </header>
 
-    <!-- مرحله ۱: آپلود فایل ها -->
-    <div class="upload-grid" id="uploadArea">
-        <!-- فایل اول (پایه) -->
-        <div class="upload-box" id="boxFile1">
-            <span class="icon">📄</span>
-            <span class="text">۱. انتخاب فایل اول (پایه)</span>
-            <span class="filename" id="nameFile1">هیچ فایلی انتخاب نشده</span>
-            <input type="file" id="file1" accept=".xlsx, .xls, .csv">
-        </div>
-        
-        <!-- فایل دوم (جستجو) -->
-        <div class="upload-box" id="boxFile2">
-            <span class="icon">🔍</span>
-            <span class="text">۲. انتخاب فایل دوم (مرجع)</span>
-            <span class="filename" id="nameFile2">هیچ فایلی انتخاب نشده</span>
-            <input type="file" id="file2" accept=".xlsx, .xls, .csv">
-        </div>
+    <!-- باکس بازیابی هوشمند -->
+    <div id="resumeBanner" class="resume-banner">
+        <h4>💡 ادامه عملیات تشخیص داده شد!</h4>
+        <p>صفحه رفرش شده است. لطفاً همان فایل قبلی را مجدداً انتخاب کنید تا سیستم به طور خودکار از <b>ردیف <span id="savedRowIdx">0</span></b> ادامه دهد.</p>
     </div>
 
-    <!-- مرحله ۲: انتخاب ستون ها -->
-    <div id="selectionStep" class="step-panel">
-        <h3>🎯 تنظیمات ادغام (کدام ستون‌ها مقایسه شوند؟)</h3>
-        
-        <div class="select-group">
-            <label>ستون مورد نظر در فایل اول (مبداء):</label>
-            <select id="colFile1"></select>
-        </div>
-        
-        <div class="select-group">
-            <label>ستون مورد نظر در فایل دوم (هدف جستجو):</label>
-            <select id="colFile2"></select>
-        </div>
+    <!-- باکس امکانات -->
+    <div id="featuresBox" class="features-grid">
+        <div class="feature-item"><span>🔒</span><b>امنیت کامل</b><p>پردازش در گوشی شما</p></div>
+        <div class="feature-item"><span>⚡</span><b>سرعت بالا</b><p>بدون نیاز به سرور</p></div>
+        <div class="feature-item"><span>💾</span><b>ذخیره خودکار</b><p>ضد رفرش صفحه</p></div>
+        <div class="feature-item"><span>📦</span><b>دسته‌بندی</b><p>بسته‌های ۷۰۰۰ تایی</p></div>
+    </div>
 
-        <button id="processBtn" class="btn-action">⚡ ترکیب و دانلود فایل نهایی</button>
-        <div id="statusText">✅ فایل با موفقیت ایجاد و دانلود شد!</div>
-        <button id="resetBtn" class="reset-btn">❌ بازنشانی و شروع مجدد</button>
+    <!-- بخش آپلود -->
+    <div class="upload-section" id="uploadArea">
+        <span style="font-size: 40px; display: block; margin-bottom: 10px;">📂</span>
+        <span id="fileStatus">انتخاب فایل اکسل</span>
+        <input type="file" id="fileInput" accept=".xlsx, .xls">
+    </div>
+
+    <div id="selectionStep" style="display:none;">
+        <select id="columnSelect"></select>
+    </div>
+
+    <div id="controlPanel" class="control-panel">
+        <div class="progress-info">
+            <span id="chunkInfo">بخش ۱</span>
+            <span id="totalInfo">کل ردیف‌ها: ۰</span>
+        </div>
+        <div class="bar-bg"><div id="progressBar" class="bar-fill"></div></div>
+        <button id="copyBtn" class="btn-copy">کپی بسته‌ی اول</button>
+        <div class="tools">
+            <button class="btn-tool btn-danger" id="resetBtn">❌ حذف فایل و بازنشانی</button>
+        </div>
     </div>
 </div>
 
+<footer>
+    <div class="dev-card">طراحی و توسعه: <b>سایبری لرستان</b></div>
+</footer>
+
 <script>
-    // متغیرهای سراسری برای نگهداری دیتای فایل ها
-    let dataFile1 = [];
-    let dataFile2 = [];
-    let headers1 =[];
-    let headers2 =[];
+    let fullRows = [];
+    let currentIndex = 0;
+    const CHUNK = 7000;
 
-    // تابع خواندن فایل اکسل
-    async function readExcel(file) {
+    // چک کردن حافظه در هنگام لود
+    window.onload = () => {
+        const savedIdx = localStorage.getItem('pro_last_idx');
+        if (savedIdx && parseInt(savedIdx) > 0) {
+            document.getElementById('resumeBanner').style.display = 'block';
+            document.getElementById('savedRowIdx').innerText = parseInt(savedIdx) + 1;
+            currentIndex = parseInt(savedIdx);
+        }
+    };
+
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        document.getElementById('fileStatus').innerHTML = `در حال خواندن <b>${file.name}</b>...`;
+        
         const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, {type: 'array'});
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        // defval: "" باعث میشود سلول های خالی نادیده گرفته نشوند و ساختار آرایه حفظ شود
-        return XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ""});
-    }
+        const workbook = XLSX.read(data);
+        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
 
-    // پر کردن لیست کشویی (Select)
-    function populateSelect(selectElement, headers) {
-        selectElement.innerHTML = '';
+        window.rawJson = json;
+        const headers = json[0];
+        
+        const select = document.getElementById('columnSelect');
+        select.innerHTML = '<option value="">🎯 ستون مورد نظر را انتخاب کنید...</option>';
         headers.forEach((h, i) => {
             const opt = document.createElement('option');
-            opt.value = i; 
-            opt.textContent = h ? `${h} (ستون ${i+1})` : `ستون ${i+1}`;
-            selectElement.appendChild(opt);
+            opt.value = i; opt.textContent = h || `ستون ${i+1}`;
+            select.appendChild(opt);
         });
-    }
 
-    // بررسی اینکه آیا هر دو فایل لود شده‌اند یا خیر
-    function checkBothFilesLoaded() {
-        if (dataFile1.length > 0 && dataFile2.length > 0) {
-            document.getElementById('selectionStep').style.display = 'block';
-            document.getElementById('statusText').style.display = 'none';
-            document.getElementById('processBtn').disabled = false;
-        }
-    }
-
-    // رویداد آپلود فایل اول
-    document.getElementById('file1').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        document.getElementById('nameFile1').innerText = `⏳ در حال خواندن...`;
-        const jsonData = await readExcel(file);
-        
-        if(jsonData.length > 0) {
-            dataFile1 = jsonData;
-            headers1 = jsonData[0];
-            populateSelect(document.getElementById('colFile1'), headers1);
-            
-            document.getElementById('nameFile1').innerText = `✔️ ${file.name}`;
-            document.getElementById('boxFile1').classList.add('active');
-            checkBothFilesLoaded();
-        }
+        document.getElementById('featuresBox').style.display = 'none';
+        document.getElementById('resumeBanner').style.display = 'none';
+        document.getElementById('uploadArea').style.display = 'none';
+        document.getElementById('selectionStep').style.display = 'block';
     });
 
-    // رویداد آپلود فایل دوم
-    document.getElementById('file2').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    document.getElementById('columnSelect').addEventListener('change', function() {
+        const colIdx = this.value;
+        if (!colIdx) return;
+
+        fullRows = window.rawJson.slice(1).map(r => r[colIdx]).filter(c => c !== undefined && c !== "");
         
-        document.getElementById('nameFile2').innerText = `⏳ در حال خواندن...`;
-        const jsonData = await readExcel(file);
-        
-        if(jsonData.length > 0) {
-            dataFile2 = jsonData;
-            headers2 = jsonData[0];
-            populateSelect(document.getElementById('colFile2'), headers2);
-            
-            document.getElementById('nameFile2').innerText = `✔️ ${file.name}`;
-            document.getElementById('boxFile2').classList.add('active');
-            checkBothFilesLoaded();
-        }
+        // اصلاح ایندکس اگر فایل جدید کوچکتر از ایندکس قبلی بود
+        if (currentIndex >= fullRows.length) currentIndex = 0;
+
+        document.getElementById('selectionStep').style.display = 'none';
+        document.getElementById('controlPanel').style.display = 'block';
+        document.getElementById('totalInfo').innerText = `کل: ${fullRows.length} ردیف`;
+        updateUI();
     });
 
-    // پردازش اصلی (Merge & Vlookup)
-    document.getElementById('processBtn').addEventListener('click', () => {
-        const btn = document.getElementById('processBtn');
-        btn.disabled = true;
-        btn.innerText = "⏳ در حال پردازش...";
+    function updateUI() {
+        const totalParts = Math.ceil(fullRows.length / CHUNK);
+        const currentPart = Math.floor(currentIndex / CHUNK) + 1;
+        document.getElementById('chunkInfo').innerText = `بخش ${currentPart} از ${totalParts}`;
+        
+        const perc = (currentIndex / fullRows.length) * 100;
+        document.getElementById('progressBar').style.width = `${perc}%`;
 
-        // استفاده از setTimeout تا UI قفل نشود
-        setTimeout(() => {
-            const idx1 = parseInt(document.getElementById('colFile1').value);
-            const idx2 = parseInt(document.getElementById('colFile2').value);
+        const end = Math.min(currentIndex + CHUNK, fullRows.length);
+        document.getElementById('copyBtn').innerText = `📋 کپی ردیف ${currentIndex + 1} تا ${end}`;
+    }
 
-            // 1. ساختن دیکشنری (Map) از فایل دوم برای جستجوی بسیار سریع
-            const lookupMap = new Map();
-            const bodyFile2 = dataFile2.slice(1); // جدا کردن ردیف های دیتا از هدر
-            
-            for (let i = 0; i < bodyFile2.length; i++) {
-                const row = bodyFile2[i];
-                // مقدار سلول رو به رشته تبدیل میکنیم تا مقایسه دقیق انجام شه (فاصله های اضافی رو هم میگیریم)
-                const key = String(row[idx2] || "").trim();
-                
-                // اگر قبلا این کلید ثبت نشده بود، ذخیره کن (دقیقا مثل Vlookup که اولین نتیجه را میدهد)
-                if (key !== "" && !lookupMap.has(key)) {
-                    lookupMap.set(key, row);
-                }
-            }
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        const end = Math.min(currentIndex + CHUNK, fullRows.length);
+        const text = fullRows.slice(currentIndex, end).join('\n');
 
-            // 2. ساخت فایل نهایی
-            const finalData =[];
-            // قرار دادن هدر فایل اول و فایل دوم در کنار هم
-            finalData.push([...headers1, ...headers2]);
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.innerText = "کپی شد! ✅";
+            btn.classList.add('success');
 
-            const bodyFile1 = dataFile1.slice(1);
-            
-            for (let i = 0; i < bodyFile1.length; i++) {
-                const rowFile1 = bodyFile1[i];
-                const keyToSearch = String(rowFile1[idx1] || "").trim();
-                
-                // جستجو در دیکشنری
-                const matchedRowFile2 = lookupMap.get(keyToSearch);
-
-                if (matchedRowFile2) {
-                    // اگر پیدا شد، ردیف فایل اول و ردیف فایل دوم را ترکیب کن
-                    finalData.push([...rowFile1, ...matchedRowFile2]);
+            setTimeout(() => {
+                btn.classList.remove('success');
+                if (end < fullRows.length) {
+                    currentIndex += CHUNK;
+                    localStorage.setItem('pro_last_idx', currentIndex);
+                    updateUI();
                 } else {
-                    // (اختیاری): اگر پیدا نشد فقط ردیف فایل اول رو میذاریم و بقیه سلول ها خالی میمونه
-                    // اگر میخواهید ردیف هایی که پیدا نشدند در خروجی نباشند، کد زیر را پاک کنید (Inner Join)
-                    // finalData.push([...rowFile1]); 
+                    btn.innerText = "پایان فایل 🎉";
+                    localStorage.removeItem('pro_last_idx');
                 }
-            }
-
-            // 3. تولید فایل اکسل و دانلود
-            const ws = XLSX.utils.aoa_to_sheet(finalData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Merged_Data");
-            
-            // دانلود فایل
-            XLSX.writeFile(wb, "Merged_Result.xlsx");
-
-            // آپدیت ظاهر دکمه
-            btn.innerText = "⚡ ترکیب و دانلود فایل نهایی";
-            btn.disabled = false;
-            document.getElementById('statusText').style.display = 'block';
-
-        }, 100); // 100 میلی ثانیه تاخیر برای نمایش گرافیکی
+            }, 1000);
+        });
     });
 
-    // دکمه بازنشانی
     document.getElementById('resetBtn').addEventListener('click', () => {
-        location.reload();
+        if(confirm("فایل حذف شود و به منوی اول بازگردیم؟")) {
+            localStorage.removeItem('pro_last_idx');
+            location.reload();
+        }
     });
 </script>
 
