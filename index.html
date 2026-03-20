@@ -155,29 +155,29 @@
         #pvTable th.sort-desc::after { content: ' ↓'; color: #c084fc; }
         #pvTable td { padding: 8px 14px; color: #cbd5e1; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.04); max-width: 200px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.15s; }
         #pvTable td:hover { background: rgba(99,102,241,0.15) !important; color: white; }
-        #pvTable td.copied { background: rgba(16,185,129,0.25) !important; color: #6ee7b7 !important; }
         #pvTable tr:hover td { background: rgba(99,102,241,0.07); }
         #pvTable tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
         #pvTable tr:nth-child(even):hover td { background: rgba(99,102,241,0.07); }
 
-        /* پاپ‌آپ محتوای کامل */
-        .pv-popup {
-            display: none; position: fixed; z-index: 9998;
-            background: rgba(15,23,42,0.97); border: 1px solid rgba(99,102,241,0.35);
-            border-radius: 16px; padding: 16px 18px; max-width: 320px; min-width: 160px;
-            font-family: 'Vazirmatn'; font-size: 13px; color: #e2e8f0;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); word-break: break-all;
-            line-height: 1.7; backdrop-filter: blur(12px);
+        /* پنل محتوای کامل سلول */
+        .pv-detail-panel {
+            display: none; background: rgba(15,23,42,0.8);
+            border: 1px solid rgba(99,102,241,0.25); border-radius: 14px;
+            padding: 12px 14px; margin-top: 8px;
         }
-        .pv-popup .pp-label { font-size: 10px; color: #818cf8; margin-bottom: 6px; display: block; font-weight: bold; }
-        .pv-popup .pp-val { color: #f1f5f9; }
-        .pv-popup .pp-copy-hint { font-size: 10px; color: #475569; margin-top: 8px; display: block; }
-        .pv-copied-toast {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            background: rgba(16,185,129,0.9); color: white; padding: 8px 20px;
-            border-radius: 20px; font-family: 'Vazirmatn'; font-size: 13px;
-            z-index: 99999; opacity: 0; transition: opacity 0.2s; pointer-events: none;
+        .pv-detail-panel .pdp-col { font-size: 10px; color: #818cf8; font-weight: bold; margin-bottom: 5px; }
+        .pv-detail-panel .pdp-val {
+            font-size: 13px; color: #f1f5f9; word-break: break-all;
+            line-height: 1.8; white-space: pre-wrap;
         }
+        .pv-detail-panel .pdp-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .pdp-btn {
+            flex: 1; padding: 9px; border-radius: 10px; border: none;
+            font-family: 'Vazirmatn'; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .pdp-btn.copy { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+        .pdp-btn.copy.done { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.25); }
+        .pdp-btn.close-btn { background: rgba(239,68,68,0.08); color: #f87171; border: 1px solid rgba(239,68,68,0.15); }
         .pv-page-btn { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: #818cf8; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: 'Vazirmatn'; font-size: 12px; transition: 0.2s; }
         .pv-page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .pv-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -424,9 +424,7 @@
             • جدول با ستون‌های <b>خودتنظیم</b> نمایش داده می‌شود.<br>
             • روی هر هدر کلیک کنید برای <b>مرتب‌سازی</b>.<br>
             • در همه ستون‌ها <b>جستجو</b> کنید.<br>
-            <br>
-            🖥️ <b>کامپیوتر:</b> موس را روی سلول نگه دارید تا محتوای کامل نمایش داده شود — کلیک کنید تا کپی شود.<br>
-            📱 <b>گوشی:</b> یک بار روی سلول بزنید تا محتوای کامل نمایش داده شود — دوباره بزنید تا کپی شود.
+            • 🖥️ <b>کامپیوتر و گوشی:</b> روی هر سلول کلیک/تاچ کنید تا محتوای کامل در پنل پایین نمایش داده شود، سپس کپی کنید.
         </div>
         <div class="upload-section" id="pvUpArea">
             <span style="font-size:30px;">👁️</span><br>
@@ -439,6 +437,15 @@
             <div id="pvTableWrap">
                 <table id="pvTable"></table>
             </div>
+            <!-- پنل نمایش محتوای کامل سلول -->
+            <div class="pv-detail-panel" id="pvDetailPanel">
+                <div class="pdp-col" id="pvDetailCol"></div>
+                <div class="pdp-val" id="pvDetailVal"></div>
+                <div class="pdp-actions">
+                    <button class="pdp-btn copy" id="pvDetailCopyBtn" onclick="pvDetailCopy()">📋 کپی</button>
+                    <button class="pdp-btn close-btn" onclick="pvDetailClose()">✕ بستن</button>
+                </div>
+            </div>
             <div id="pvPager" style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:10px;flex-wrap:wrap;"></div>
             <button onclick="resetPreview()" class="reset-btn">❌ بستن فایل</button>
         </div>
@@ -446,15 +453,6 @@
 </div>
 
 <footer>طراحی و توسعه: سایبری لرستان</footer>
-
-<!-- پاپ‌آپ محتوای کامل سلول -->
-<div class="pv-popup" id="pvPopup">
-    <span class="pp-label" id="pvPopupLabel"></span>
-    <span class="pp-val" id="pvPopupVal"></span>
-    <span class="pp-copy-hint">👆 کلیک برای کپی</span>
-</div>
-<!-- توست کپی -->
-<div class="pv-copied-toast" id="pvToast">✅ کپی شد!</div>
 
 <script>
 // ===== ابزار مشترک =====
@@ -1151,7 +1149,7 @@ function renderPreviewTable(){
             const display=String(row[ci]??'');
             const escaped=display.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
             const colName=String(headers[ci]||'ستون '+(ci+1)).replace(/"/g,'&quot;');
-            html+=`<td onclick="pvCopyCell(this,'${escaped}','${colName}')" onmouseenter="pvShowPopup(event,'${escaped}','${colName}')" onmouseleave="pvHidePopup()" title="">${display}</td>`;
+            html+=`<td onclick="pvCellClick('${escaped}','${colName}')">${display}</td>`;
         });
         html+='</tr>';
     });
@@ -1171,141 +1169,36 @@ function renderPreviewTable(){
     document.getElementById('pvPager').innerHTML=pager;
 }
 
-// تشخیص دستگاه لمسی
-function isTouchDevice() {
-    return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-}
+// ===== پنل محتوای کامل سلول =====
+let pvCurrentVal = '';
 
-let pvLastTapped = null;
-
-function pvCopyCell(td, val, colName) {
+function pvCellClick(val, colName) {
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-
-    if (isTouchDevice()) {
-        // موبایل: همیشه اول پاپ‌آپ، دوم کپی
-        if (pvLastTapped === td) {
-            // tap دوم → کپی
-            pvLastTapped = null;
-            pvHidePopupNow();
-            navigator.clipboard.writeText(decoded).then(() => {
-                td.classList.add('copied');
-                setTimeout(() => td.classList.remove('copied'), 800);
-                const toast = document.getElementById('pvToast');
-                toast.textContent = '✅ کپی شد!';
-                toast.style.opacity = '1';
-                setTimeout(() => toast.style.opacity = '0', 1500);
-            }).catch(() => {
-                // fallback برای مرورگرهایی که clipboard ندارن
-                const toast = document.getElementById('pvToast');
-                toast.textContent = decoded.substring(0,30) + (decoded.length>30?'...':'');
-                toast.style.opacity = '1';
-                setTimeout(() => toast.style.opacity = '0', 2000);
-            });
-        } else {
-            // tap اول → پاپ‌آپ
-            pvLastTapped = td;
-            pvShowPopupFromTd(td, decoded, colName);
-        }
-    } else {
-        // دسکتاپ → مستقیم کپی
-        navigator.clipboard.writeText(decoded).then(() => {
-            td.classList.add('copied');
-            setTimeout(() => td.classList.remove('copied'), 800);
-            pvHidePopupNow();
-            const toast = document.getElementById('pvToast');
-            toast.textContent = '✅ کپی شد!';
-            toast.style.opacity = '1';
-            setTimeout(() => toast.style.opacity = '0', 1500);
-        });
-    }
+    const decodedCol = colName.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+    pvCurrentVal = decoded;
+    document.getElementById('pvDetailCol').textContent = decodedCol;
+    document.getElementById('pvDetailVal').textContent = decoded;
+    const btn = document.getElementById('pvDetailCopyBtn');
+    btn.textContent = '📋 کپی';
+    btn.classList.remove('done');
+    document.getElementById('pvDetailPanel').style.display = 'block';
+    // اسکرول به پنل
+    document.getElementById('pvDetailPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function pvShowPopupFromTd(td, decoded, colName) {
-    const popup = document.getElementById('pvPopup');
-    const decodedCol = colName.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    document.getElementById('pvPopupLabel').textContent = decodedCol;
-    document.getElementById('pvPopupVal').textContent = decoded;
-    document.getElementById('pvPopup').querySelector('.pp-copy-hint').textContent = '👆 دوباره بزنید تا کپی شود';
-    popup.style.display = 'block';
-    // موقعیت‌دهی
-    const rect = td.getBoundingClientRect();
-    let top = rect.bottom + window.scrollY + 8;
-    let left = rect.left + window.scrollX;
-    // اطمینان از اینکه پاپ‌آپ رندر شده
-    requestAnimationFrame(() => {
-        const pw = popup.offsetWidth;
-        const ph = popup.offsetHeight;
-        if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
-        if (left < 8) left = 8;
-        const topInViewport = rect.bottom + 8;
-        if (topInViewport + ph > window.innerHeight - 10) {
-            top = rect.top + window.scrollY - ph - 8;
-        }
-        popup.style.top = top + 'px';
-        popup.style.left = left + 'px';
+function pvDetailCopy() {
+    navigator.clipboard.writeText(pvCurrentVal).then(() => {
+        const btn = document.getElementById('pvDetailCopyBtn');
+        btn.textContent = '✅ کپی شد!';
+        btn.classList.add('done');
+        setTimeout(() => { btn.textContent='📋 کپی'; btn.classList.remove('done'); }, 2000);
     });
-    popup.onclick = (e) => { e.stopPropagation(); };
 }
 
-// پاپ‌آپ hover دسکتاپ
-let pvPopupTimer = null;
-function pvShowPopup(e, val, colName) {
-    if (isTouchDevice()) return;
-    clearTimeout(pvPopupTimer);
-    const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    const td = e.currentTarget;
-    const isTruncated = td.scrollWidth > td.clientWidth || decoded.length > 20;
-    if (!isTruncated) return;
-    const popup = document.getElementById('pvPopup');
-    const decodedCol = colName.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    document.getElementById('pvPopupLabel').textContent = decodedCol;
-    document.getElementById('pvPopupVal').textContent = decoded;
-    document.getElementById('pvPopup').querySelector('.pp-copy-hint').textContent = '👆 کلیک برای کپی';
-    const rect = td.getBoundingClientRect();
-    let top = rect.bottom + 8;
-    let left = rect.left;
-    popup.style.display = 'block';
-    const pw = popup.offsetWidth;
-    if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
-    if (left < 8) left = 8;
-    if (top + popup.offsetHeight > window.innerHeight - 10) top = rect.top - popup.offsetHeight - 8;
-    popup.style.top = top + 'px';
-    popup.style.left = left + 'px';
-    popup.onclick = (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(decoded).then(() => {
-            pvHidePopupNow();
-            const t = document.getElementById('pvToast');
-            t.textContent = '✅ کپی شد!';
-            t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 1500);
-        });
-    };
+function pvDetailClose() {
+    document.getElementById('pvDetailPanel').style.display = 'none';
+    pvCurrentVal = '';
 }
-
-function pvHidePopup() {
-    pvPopupTimer = setTimeout(() => pvHidePopupNow(), 200);
-}
-function pvHidePopupNow() {
-    clearTimeout(pvPopupTimer);
-    document.getElementById('pvPopup').style.display = 'none';
-}
-
-// بستن پاپ‌آپ با کلیک بیرون — فقط دسکتاپ
-document.addEventListener('click', e => {
-    if (isTouchDevice()) return; // موبایل خودش مدیریت می‌کنه
-    if (!e.target.closest('#pvPopup') && !e.target.closest('#pvTable td')) {
-        pvHidePopupNow();
-    }
-});
-
-// بستن پاپ‌آپ موبایل با tap بیرون از جدول
-document.addEventListener('touchstart', e => {
-    if (!e.target.closest('#pvPopup') && !e.target.closest('#pvTable td')) {
-        pvHidePopupNow();
-        pvLastTapped = null;
-    }
-}, {passive: true});
 
 function pvSort(colIdx){
     if(pvSortCol===colIdx) pvSortDir*=-1;
