@@ -31,8 +31,7 @@
         .tab-btn {
             flex: 1; padding: 10px 6px; border: none; border-radius: 12px;
             background: transparent; color: #94a3b8; cursor: pointer;
-            font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s;
-            font-size: 12px; min-width: 80px;
+            font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s; font-size: 12px;
         }
         .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
         header h1 {
@@ -80,21 +79,18 @@
         .warn-box {
             background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
             border-radius: 14px; padding: 12px; margin-top: 12px; font-size: 12px;
-            line-height: 1.9; color: #fca5a5; display: none; word-break: break-all;
+            line-height: 1.9; color: #fca5a5; display: none;
         }
-        /* باکس دیباگ */
-        .debug-box {
-            background: rgba(15,23,42,0.7); border: 1px solid #334155;
-            border-radius: 14px; padding: 12px; margin-top: 12px; font-size: 11px;
-            line-height: 1.8; color: #94a3b8; display: none; direction: ltr;
-            font-family: monospace; word-break: break-all;
+        /* پیش‌نمایش ستون */
+        .preview-box {
+            background: rgba(15,23,42,0.8); border: 1px solid #334155;
+            border-radius: 12px; padding: 10px 12px; margin-top: 8px;
+            font-size: 11px; line-height: 1.8; direction: ltr;
+            font-family: monospace; color: #94a3b8; display: none;
         }
-        .debug-box .lbl { color: #818cf8; font-weight: bold; }
-        .debug-toggle {
-            background: none; border: 1px solid #334155; color: #64748b;
-            font-family: 'Vazirmatn'; font-size: 11px; border-radius: 10px;
-            padding: 6px 14px; cursor: pointer; margin-top: 10px; width: 100%;
-        }
+        .preview-box .pv-val { color: #e2e8f0; }
+        .preview-box .pv-type { color: #475569; font-size: 10px; }
+        .preview-box .pv-head { color: #818cf8; font-weight: bold; margin-bottom: 4px; display: block; font-family: 'Vazirmatn'; font-size: 11px; direction: rtl; }
         footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
         .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 12px; cursor: pointer; }
     </style>
@@ -102,7 +98,6 @@
 <body>
 <div class="container">
     <header><h1>Excel Pro Suite</h1></header>
-
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی هوشمند</button>
         <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
@@ -116,8 +111,7 @@
             • داده‌ها در بسته‌های ۷۰۰۰ تایی (قابل تغییر) آماده کپی می‌شوند.
         </div>
         <div class="upload-section" id="upArea1">
-            <span style="font-size:30px;">📂</span><br>
-            <span id="st1">انتخاب فایل برای کپی</span>
+            <span style="font-size:30px;">📂</span><br><span id="st1">انتخاب فایل برای کپی</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'copy')">
         </div>
         <div id="copyControls" style="display:none;">
@@ -137,8 +131,7 @@
             • ردیف‌های بدون شماره معتبر <b>حذف</b> خواهند شد.
         </div>
         <div class="upload-section" id="upArea2">
-            <span style="font-size:30px;">📱</span><br>
-            <span id="st2">انتخاب فایل برای اصلاح شماره</span>
+            <span style="font-size:30px;">📱</span><br><span id="st2">انتخاب فایل برای اصلاح شماره</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'fixer')">
         </div>
         <div id="fixerControls" style="display:none;">
@@ -147,94 +140,61 @@
         </div>
     </div>
 
-    <!-- تب سوم -->
+    <!-- تب سوم: ادغام -->
     <div id="mergeTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • دو فایل اکسل آپلود کنید.<br>
-            • ستون مشترک (مثلاً <b>شناسه</b>) را در هر دو فایل انتخاب کنید.<br>
-            • ستون شماره تلفن در فایل دوم را انتخاب کنید.<br>
-            • شماره‌ها به فرمت <b>09xxxxxxxxx</b> تبدیل می‌شوند.
+            • ستون مشترک را در هر دو فایل انتخاب کنید — <b>پیش‌نمایش مقادیر</b> نشان داده می‌شود.<br>
+            • ستون شماره تلفن در فایل دوم را انتخاب کنید.
         </div>
 
         <p class="section-label">📁 فایل اول</p>
         <div class="upload-section" id="mergeUp1">
-            <span style="font-size:28px;">📂</span><br>
-            <span id="mergeSt1">انتخاب فایل اول</span>
+            <span style="font-size:28px;">📂</span><br><span id="mergeSt1">انتخاب فایل اول</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,1)">
         </div>
         <div id="mergeCtrl1" style="display:none;">
             <p class="section-label">ستون مشترک در فایل اول:</p>
-            <select id="mergeCol1" onchange="checkMergeReady()"></select>
+            <select id="mergeCol1" onchange="onColChange(this,'preview1','f1')"></select>
+            <div class="preview-box" id="preview1"></div>
         </div>
 
         <p class="section-label">📁 فایل دوم</p>
         <div class="upload-section" id="mergeUp2">
-            <span style="font-size:28px;">📂</span><br>
-            <span id="mergeSt2">انتخاب فایل دوم</span>
+            <span style="font-size:28px;">📂</span><br><span id="mergeSt2">انتخاب فایل دوم</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,2)">
         </div>
         <div id="mergeCtrl2" style="display:none;">
             <p class="section-label">ستون مشترک در فایل دوم:</p>
-            <select id="mergeCol2Key" onchange="checkMergeReady()"></select>
+            <select id="mergeCol2Key" onchange="onColChange(this,'preview2key','f2')"></select>
+            <div class="preview-box" id="preview2key"></div>
             <p class="section-label">ستون شماره تلفن در فایل دوم:</p>
-            <select id="mergeCol2Phone" onchange="checkMergeReady()"></select>
+            <select id="mergeCol2Phone" onchange="onColChange(this,'preview2phone','f2'); checkMergeReady()"></select>
+            <div class="preview-box" id="preview2phone"></div>
         </div>
 
         <button id="btnMerge" class="main-btn" onclick="doMerge()" disabled>🔗 ادغام و دانلود فایل نهایی</button>
-
         <div class="result-box" id="mergeResult"></div>
         <div class="warn-box" id="mergeWarn"></div>
-
-        <!-- دکمه و باکس دیباگ -->
-        <button class="debug-toggle" id="debugToggleBtn" style="display:none;" onclick="toggleDebug()">🔍 نمایش اطلاعات دیباگ</button>
-        <div class="debug-box" id="debugBox"></div>
-
         <button onclick="resetMerge()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 </div>
-
 <footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
 
 <script>
-// ===================== ابزار مشترک =====================
-
-/**
- * نرمال‌سازی قوی کلید برای مقایسه:
- * - number → string مستقیم (بدون نماد علمی)
- * - تبدیل اعداد فارسی/عربی
- * - حذف فاصله‌های پنهان
- * - حذف صفرهای ابتدایی در اعداد خالص
- */
+// ===== ابزار مشترک =====
 function normalizeKey(val) {
     if (val === null || val === undefined) return '';
-
     if (typeof val === 'number') {
-        // جلوگیری از نماد علمی: 1.23e+11 → "123000000000"
         if (!isFinite(val)) return '';
-        // اگر صحیح بود
-        if (Number.isInteger(val)) return String(val);
-        // اگر اعشاری بود، گرد کن (شناسه‌ها معمولاً صحیح هستند)
-        return String(Math.round(val));
+        return String(Number.isInteger(val) ? val : Math.round(val));
     }
-
     let s = String(val);
-
-    // تبدیل اعداد فارسی ۰-۹
     s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
-    // تبدیل اعداد عربی ٠-٩
     s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
-
-    // حذف فاصله‌های مختلف (space, ZWNJ, nbsp, ZWS, ...)
     s = s.replace(/[\s\u200c\u00a0\u200b\u200d\ufeff\u202a-\u202e]+/g, ' ').trim();
-
-    // lowercase
     s = s.toLowerCase();
-
-    // اگر خالصاً عددی بود، صفرهای ابتدایی حذف شود (012345 == 12345)
-    if (/^\d+$/.test(s)) {
-        s = String(parseInt(s, 10));
-    }
-
+    if (/^\d+$/.test(s)) s = String(parseInt(s, 10));
     return s;
 }
 
@@ -252,7 +212,7 @@ function fixPhone(val) {
     return null;
 }
 
-// ===================== تب‌ها =====================
+// ===== تب‌ها =====
 let rawData = [], cleanRows = [], currentIdx = 0;
 
 function openTab(name, btn) {
@@ -263,10 +223,8 @@ function openTab(name, btn) {
 }
 
 async function handleFile(input, mode) {
-    const file = input.files[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data);
+    const file = input.files[0]; if (!file) return;
+    const wb = XLSX.read(await file.arrayBuffer());
     rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
     const headers = rawData[0];
     if (mode === 'copy') {
@@ -285,78 +243,95 @@ async function handleFile(input, mode) {
 }
 
 document.getElementById('colSelectCopy').onchange = function() {
-    const col = this.value;
-    cleanRows = rawData.slice(1).map(r => r[col]).filter(c => c !== undefined && c !== null && c !== '');
-    currentIdx = 0;
-    updateCopyUI();
+    cleanRows = rawData.slice(1).map(r => r[this.value]).filter(c => c != null && c !== '');
+    currentIdx = 0; updateCopyUI();
 };
-
 function updateCopyUI() {
-    const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
-    const end = Math.min(currentIdx + chunk, cleanRows.length);
+    const chunk = parseInt(document.getElementById('chunkSize').value)||7000;
+    const end = Math.min(currentIdx+chunk, cleanRows.length);
     document.getElementById('btnCopy').innerText = `📋 کپی ردیف ${currentIdx+1} تا ${end}`;
-    document.getElementById('bar1').style.width = (currentIdx / cleanRows.length * 100) + '%';
+    document.getElementById('bar1').style.width = (currentIdx/cleanRows.length*100)+'%';
 }
-
 document.getElementById('btnCopy').onclick = function() {
-    const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
-    const end = Math.min(currentIdx + chunk, cleanRows.length);
-    const text = cleanRows.slice(currentIdx, end).join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-        this.innerText = "کپی شد! ✅"; this.classList.add('success');
-        setTimeout(() => {
-            this.classList.remove('success');
-            if (end < cleanRows.length) { currentIdx += chunk; updateCopyUI(); }
-            else this.innerText = "پایان فایل 🎉";
-        }, 1000);
+    const chunk = parseInt(document.getElementById('chunkSize').value)||7000;
+    const end = Math.min(currentIdx+chunk, cleanRows.length);
+    navigator.clipboard.writeText(cleanRows.slice(currentIdx,end).join('\n')).then(() => {
+        this.innerText="کپی شد! ✅"; this.classList.add('success');
+        setTimeout(() => { this.classList.remove('success'); if(end<cleanRows.length){currentIdx+=chunk;updateCopyUI();}else this.innerText="پایان فایل 🎉"; }, 1000);
     });
 };
-
 document.getElementById('btnFix').onclick = function() {
     const colIdx = document.getElementById('colSelectFixer').value;
-    if (colIdx === '') return alert("لطفا ستون را انتخاب کنید");
-    this.innerText = "در حال پردازش... ⏳";
-    const processedData = rawData.slice(1).map(row => {
-        let fixed = fixPhone(row[colIdx]);
-        if (fixed) { let nr = [...row]; nr[colIdx] = fixed; return nr; }
-        return null;
-    }).filter(r => r !== null);
-    const newWb = XLSX.utils.book_new();
-    const newWs = XLSX.utils.aoa_to_sheet([rawData[0], ...processedData]);
-    XLSX.utils.book_append_sheet(newWb, newWs, "Fixed Numbers");
-    XLSX.writeFile(newWb, "Fixed_Phones.xlsx");
-    this.innerText = "فایل آماده شد! ✅";
-    setTimeout(() => this.innerText = "✨ اصلاح و دانلود فایل جدید", 3000);
+    if(colIdx==='') return alert("لطفا ستون را انتخاب کنید");
+    this.innerText="در حال پردازش... ⏳";
+    const out = rawData.slice(1).map(row => { const f=fixPhone(row[colIdx]); if(f){let r=[...row];r[colIdx]=f;return r;}return null;}).filter(Boolean);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([rawData[0],...out]),"Fixed");
+    XLSX.writeFile(wb,"Fixed_Phones.xlsx");
+    this.innerText="فایل آماده شد! ✅";
+    setTimeout(()=>this.innerText="✨ اصلاح و دانلود فایل جدید",3000);
 };
 
-// ===================== تب سوم: ادغام =====================
-let mergeData1 = null, mergeData2 = null;
+// ===== تب سوم =====
+let mergeData1=null, mergeData2=null;
+
+// نمایش پیش‌نمایش مقادیر ستون انتخاب‌شده
+function onColChange(sel, previewId, fileKey) {
+    const colIdx = sel.value;
+    const pbox = document.getElementById(previewId);
+    if (colIdx === '') { pbox.style.display='none'; checkMergeReady(); return; }
+
+    const data = fileKey === 'f1' ? mergeData1 : mergeData2;
+    const col = parseInt(colIdx);
+
+    // ۸ مقدار غیر خالی نمونه
+    const samples = [];
+    for (let i = 1; i < data.length && samples.length < 8; i++) {
+        const v = data[i][col];
+        if (v !== undefined && v !== null && v !== '') samples.push(v);
+    }
+
+    if (samples.length === 0) {
+        pbox.innerHTML = '<span class="pv-head">⚠️ این ستون خالی به نظر می‌رسد</span>';
+        pbox.style.display = 'block';
+        checkMergeReady();
+        return;
+    }
+
+    const rows = samples.map(v => {
+        const norm = normalizeKey(v);
+        return `<span class="pv-val">${JSON.stringify(v)}</span> <span class="pv-type">[${typeof v}] → "${norm}"</span>`;
+    }).join('<br>');
+
+    pbox.innerHTML = `<span class="pv-head">پیش‌نمایش مقادیر (${samples.length} نمونه):</span>${rows}`;
+    pbox.style.display = 'block';
+    checkMergeReady();
+}
 
 async function handleMergeFile(input, fileNum) {
-    const file = input.files[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data);
-    // raw:true: اعداد به صورت number خوانده می‌شوند (نه string)
-    const sheetData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const file = input.files[0]; if (!file) return;
+    const wb = XLSX.read(await file.arrayBuffer());
+    const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
 
     if (fileNum === 1) {
-        mergeData1 = sheetData;
-        const h = sheetData[0] || [];
+        mergeData1 = data;
+        const h = data[0]||[];
         const sel = document.getElementById('mergeCol1');
         sel.innerHTML = '<option value="">انتخاب ستون مشترک...</option>';
         h.forEach((v,i) => sel.innerHTML += `<option value="${i}">${v||'ستون '+(i+1)}</option>`);
+        document.getElementById('preview1').style.display='none';
         document.getElementById('mergeUp1').classList.add('uploaded');
         document.getElementById('mergeSt1').textContent = '✅ ' + file.name;
         document.getElementById('mergeCtrl1').style.display = 'block';
     } else {
-        mergeData2 = sheetData;
-        const h = sheetData[0] || [];
+        mergeData2 = data;
+        const h = data[0]||[];
         ['mergeCol2Key','mergeCol2Phone'].forEach(id => {
             const sel = document.getElementById(id);
             sel.innerHTML = '<option value="">انتخاب...</option>';
             h.forEach((v,i) => sel.innerHTML += `<option value="${i}">${v||'ستون '+(i+1)}</option>`);
         });
+        ['preview2key','preview2phone'].forEach(id => document.getElementById(id).style.display='none');
         document.getElementById('mergeUp2').classList.add('uploaded');
         document.getElementById('mergeSt2').textContent = '✅ ' + file.name;
         document.getElementById('mergeCtrl2').style.display = 'block';
@@ -377,128 +352,76 @@ function doMerge() {
     const col2Pho = parseInt(document.getElementById('mergeCol2Phone').value);
 
     const btn = document.getElementById('btnMerge');
-    btn.innerText = '⏳ در حال پردازش...';
-    btn.disabled = true;
+    btn.innerText='⏳ در حال پردازش...'; btn.disabled=true;
 
-    // --- ساخت Map از فایل دوم ---
+    // Map از فایل دوم
     const phoneMap = new Map();
-    const headers2 = mergeData2[0] || [];
-    let skippedNoPhone = 0;
-
-    for (let i = 1; i < mergeData2.length; i++) {
+    const h2 = mergeData2[0]||[];
+    let skippedNoPhone=0;
+    for (let i=1; i<mergeData2.length; i++) {
         const row = mergeData2[i];
         const rawKey = row[col2Key];
-        if (rawKey === undefined || rawKey === null || rawKey === '') continue;
+        if (rawKey===undefined||rawKey===null||rawKey==='') continue;
         const nKey = normalizeKey(rawKey);
         if (!nKey) continue;
-        const fixedPhone = fixPhone(row[col2Pho]);
-        if (fixedPhone) {
-            if (!phoneMap.has(nKey)) phoneMap.set(nKey, fixedPhone);
-        } else {
-            skippedNoPhone++;
-        }
+        const phone = fixPhone(row[col2Pho]);
+        if (phone) { if (!phoneMap.has(nKey)) phoneMap.set(nKey, phone); }
+        else skippedNoPhone++;
     }
 
-    // --- جستجو در فایل اول ---
-    const headers1 = mergeData1[0] || [];
-    const phoneColHeader = headers2[col2Pho] || 'شماره تلفن';
-    const outputRows = [[...headers1, phoneColHeader]];
-    let matchCount = 0, noMatchCount = 0;
-
-    for (let i = 1; i < mergeData1.length; i++) {
+    // جستجو در فایل اول
+    const h1 = mergeData1[0]||[];
+    const outputRows = [[...h1, h2[col2Pho]||'شماره تلفن']];
+    let matchCount=0, noMatchCount=0;
+    for (let i=1; i<mergeData1.length; i++) {
         const row = mergeData1[i];
         const rawKey = row[col1];
-        if (rawKey === undefined || rawKey === null || rawKey === '') continue;
+        if (rawKey===undefined||rawKey===null||rawKey==='') continue;
         const nKey = normalizeKey(rawKey);
-        if (phoneMap.has(nKey)) {
-            outputRows.push([...row, phoneMap.get(nKey)]);
-            matchCount++;
-        } else {
-            noMatchCount++;
-        }
+        if (phoneMap.has(nKey)) { outputRows.push([...row, phoneMap.get(nKey)]); matchCount++; }
+        else noMatchCount++;
     }
 
-    // --- تهیه اطلاعات دیباگ ---
-    const sampleSize = 5;
-    const s1 = mergeData1.slice(1, sampleSize+1).map(r => {
-        const raw = r[col1];
-        const norm = normalizeKey(raw);
-        return `<span style="color:#e2e8f0">${JSON.stringify(raw)}</span> <span style="color:#64748b">[${typeof raw}]</span> → <span style="color:#818cf8">"${norm}"</span>`;
-    }).join('<br>');
-    const s2 = mergeData2.slice(1, sampleSize+1).map(r => {
-        const raw = r[col2Key];
-        const norm = normalizeKey(raw);
-        const phone = fixPhone(r[col2Pho]);
-        return `<span style="color:#e2e8f0">${JSON.stringify(raw)}</span> <span style="color:#64748b">[${typeof raw}]</span> → <span style="color:#818cf8">"${norm}"</span> | tel: <span style="color:#10b981">${phone||'❌'}</span>`;
-    }).join('<br>');
+    document.getElementById('mergeWarn').style.display='none';
+    document.getElementById('mergeResult').style.display='none';
 
-    const debugBox = document.getElementById('debugBox');
-    debugBox.innerHTML = `
-        <span class="lbl">📁 فایل اول — نمونه کلیدها (raw → normalized):</span><br>${s1}
-        <br><br>
-        <span class="lbl">📁 فایل دوم — نمونه کلیدها + شماره:</span><br>${s2}
-        <br><br>
-        <span class="lbl">Map حاوی ${phoneMap.size} کلید منحصربه‌فرد با شماره معتبر</span>
-    `;
-    document.getElementById('debugToggleBtn').style.display = 'block';
-
-    // --- نتیجه ---
-    document.getElementById('mergeWarn').style.display = 'none';
-    document.getElementById('mergeResult').style.display = 'none';
-
-    if (matchCount === 0) {
+    if (matchCount===0) {
+        // نمونه‌های واقعی از هر دو طرف برای مقایسه
+        const n1 = mergeData1.slice(1,4).map(r=>normalizeKey(r[col1])).filter(Boolean);
+        const n2 = [...phoneMap.keys()].slice(0,4);
         const w = document.getElementById('mergeWarn');
-        w.style.display = 'block';
-        w.innerHTML = `⚠️ هیچ تطابقی پیدا نشد!<br>
-            Map فایل دوم: <b>${phoneMap.size}</b> کلید | فایل اول: <b>${mergeData1.length-1}</b> ردیف<br>
-            <small>برای دیدن مقادیر خام، دکمه دیباگ را بزنید.</small>`;
-        btn.innerText = '🔗 ادغام و دانلود فایل نهایی';
-        btn.disabled = false;
+        w.style.display='block';
+        w.innerHTML=`⚠️ هیچ تطابقی پیدا نشد!<br>
+            نمونه کلید فایل اول: <b>${n1.join(' | ')}</b><br>
+            نمونه کلید فایل دوم (از Map): <b>${n2.join(' | ')}</b><br>
+            <small>پیش‌نمایش‌های بالا را چک کنید — آیا مقادیر شبیه هم هستند؟</small>`;
+        btn.innerText='🔗 ادغام و دانلود فایل نهایی'; btn.disabled=false;
         return;
     }
 
-    const newWb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(newWb, XLSX.utils.aoa_to_sheet(outputRows), "Merged");
-    XLSX.writeFile(newWb, "Merged_Result.xlsx");
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(outputRows),"Merged");
+    XLSX.writeFile(wb,"Merged_Result.xlsx");
 
-    const r = document.getElementById('mergeResult');
-    r.style.display = 'block';
-    r.innerHTML = `
-        ✅ فایل نهایی آماده شد!<br>
-        🟢 ردیف‌های منطبق (با شماره): <b>${matchCount}</b><br>
-        🔴 ردیف‌های بدون تطابق در فایل اول: <b>${noMatchCount}</b><br>
-        ⚪ ردیف‌های فایل دوم بدون شماره معتبر: <b>${skippedNoPhone}</b>
-    `;
-    btn.innerText = '✅ فایل دانلود شد!';
-    btn.classList.add('success');
-    setTimeout(() => {
-        btn.innerText = '🔗 ادغام و دانلود فایل نهایی';
-        btn.classList.remove('success');
-        btn.disabled = false;
-    }, 3000);
-}
+    const r=document.getElementById('mergeResult');
+    r.style.display='block';
+    r.innerHTML=`✅ فایل نهایی آماده شد!<br>
+        🟢 ردیف‌های منطبق: <b>${matchCount}</b><br>
+        🔴 بدون تطابق در فایل اول: <b>${noMatchCount}</b><br>
+        ⚪ فایل دوم بدون شماره معتبر: <b>${skippedNoPhone}</b>`;
 
-function toggleDebug() {
-    const box = document.getElementById('debugBox');
-    const btn = document.getElementById('debugToggleBtn');
-    if (box.style.display === 'none' || box.style.display === '') {
-        box.style.display = 'block';
-        btn.textContent = '🔍 مخفی کردن دیباگ';
-    } else {
-        box.style.display = 'none';
-        btn.textContent = '🔍 نمایش اطلاعات دیباگ';
-    }
+    btn.innerText='✅ فایل دانلود شد!'; btn.classList.add('success');
+    setTimeout(()=>{ btn.innerText='🔗 ادغام و دانلود فایل نهایی'; btn.classList.remove('success'); btn.disabled=false; },3000);
 }
 
 function resetMerge() {
-    mergeData1 = null; mergeData2 = null;
-    ['mergeCtrl1','mergeCtrl2'].forEach(id => document.getElementById(id).style.display = 'none');
-    ['mergeUp1','mergeUp2'].forEach(id => document.getElementById(id).classList.remove('uploaded'));
-    document.getElementById('mergeSt1').textContent = 'انتخاب فایل اول';
-    document.getElementById('mergeSt2').textContent = 'انتخاب فایل دوم';
-    ['mergeResult','mergeWarn','debugBox'].forEach(id => document.getElementById(id).style.display = 'none');
-    document.getElementById('debugToggleBtn').style.display = 'none';
-    document.getElementById('btnMerge').disabled = true;
+    mergeData1=null; mergeData2=null;
+    ['mergeCtrl1','mergeCtrl2'].forEach(id=>document.getElementById(id).style.display='none');
+    ['mergeUp1','mergeUp2'].forEach(id=>document.getElementById(id).classList.remove('uploaded'));
+    document.getElementById('mergeSt1').textContent='انتخاب فایل اول';
+    document.getElementById('mergeSt2').textContent='انتخاب فایل دوم';
+    ['mergeResult','mergeWarn','preview1','preview2key','preview2phone'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('btnMerge').disabled=true;
 }
 </script>
 </body>
