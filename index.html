@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Suite | ابزار پیشرفته اکسل</title>
+    <title>جعبه ابزار اکسل | ابزار پیشرفته اکسل</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -189,7 +189,7 @@
 <!-- صفحه قفل -->
 <div class="lock-screen" id="lockScreen">
     <div class="lock-box">
-        <h2>Excel Pro Suite</h2>
+        <h2>جعبه ابزار اکسل</h2>
         <p>برای ورود رمز عبور را وارد کنید</p>
         <input type="password" id="pwdInput" placeholder="رمز عبور" onkeydown="if(event.key==='Enter') checkPassword()">
         <button class="lock-btn" onclick="checkPassword()">🔓 ورود</button>
@@ -198,7 +198,7 @@
 </div>
 
 <div class="container">
-    <header><h1>Excel Pro Suite</h1></header>
+    <header><h1>جعبه ابزار اکسل</h1></header>
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی هوشمند</button>
         <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
@@ -953,7 +953,7 @@ let APP_PASSWORD=null;
 async function loadConfig(){
     if(sessionStorage.getItem('unlocked')==='1'){document.getElementById('lockScreen').style.display='none';return;}
     try{const res=await fetch('config.json?v='+Date.now());const cfg=await res.json();APP_PASSWORD=cfg.password;}
-    catch(e){APP_PASSWORD='excel1404';}
+    catch(e){APP_PASSWORD='7716';}
 }
 function checkPassword(){
     const input=document.getElementById('pwdInput');
