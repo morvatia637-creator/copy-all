@@ -1171,18 +1171,22 @@ function renderPreviewTable(){
     document.getElementById('pvPager').innerHTML=pager;
 }
 
+// تشخیص دستگاه لمسی
+function isTouchDevice() {
+    return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}
+
 // کپی سلول با کلیک
 let pvLastTapped = null; // برای موبایل: tap اول پاپ‌آپ، tap دوم کپی
 
 function pvCopyCell(td, val, colName) {
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    const isTouchDevice = window.matchMedia('(hover: none)').matches;
+    const isTouch = isTouchDevice();
     const isTruncated = td.scrollWidth > td.clientWidth || decoded.length > 25;
 
-    if (isTouchDevice && isTruncated) {
-        // موبایل: اگر سلول بریده‌شده است
+    if (isTouch && isTruncated) {
+        // موبایل + سلول بریده‌شده: tap اول پاپ‌آپ، tap دوم کپی
         if (pvLastTapped === td) {
-            // tap دوم → کپی
             navigator.clipboard.writeText(decoded).then(() => {
                 td.classList.add('copied');
                 setTimeout(() => td.classList.remove('copied'), 800);
@@ -1194,10 +1198,9 @@ function pvCopyCell(td, val, colName) {
                 pvLastTapped = null;
             });
         } else {
-            // tap اول → نمایش پاپ‌آپ
             pvLastTapped = td;
             pvShowPopupFromTd(td, decoded, colName);
-            setTimeout(() => { if (pvLastTapped === td) pvLastTapped = null; }, 3000);
+            setTimeout(() => { if (pvLastTapped === td) { pvLastTapped = null; pvHidePopup(); } }, 4000);
         }
     } else {
         // دسکتاپ یا سلول کوتاه → مستقیم کپی
@@ -1234,8 +1237,7 @@ function pvShowPopupFromTd(td, decoded, colName) {
 // پاپ‌آپ محتوای کامل (hover دسکتاپ)
 let pvPopupTimer = null;
 function pvShowPopup(e, val, colName) {
-    const isTouchDevice = window.matchMedia('(hover: none)').matches;
-    if (isTouchDevice) return; // موبایل از tap استفاده می‌کنه
+    if (isTouchDevice()) return; // موبایل از tap استفاده می‌کنه
     clearTimeout(pvPopupTimer);
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
     const td = e.currentTarget;
