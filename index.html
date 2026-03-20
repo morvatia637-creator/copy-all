@@ -173,6 +173,7 @@
         <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب فایل‌ها</button>
         <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
         <button class="tab-btn" onclick="openTab('nidTab',this)">🪪 کدملی</button>
+        <button class="tab-btn" onclick="openTab('intersectTab',this)">🔍 اشتراک</button>
     </div>
 
     <!-- تب اول -->
@@ -318,6 +319,46 @@
             <div class="warn-box" id="nidWarn"></div>
             <button onclick="resetNid()" class="reset-btn">❌ شروع مجدد</button>
         </div>
+    </div>
+
+    <!-- تب هفتم: اشتراک‌گیری -->
+    <div id="intersectTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • دو فایل اکسل آپلود کنید.<br>
+            • از هر فایل ستون مورد نظر را انتخاب کنید.<br>
+            • مقادیر <b>مشترک</b> بین دو ستون استخراج می‌شوند.<br>
+            • می‌توانید ستون‌های بیشتری از فایل اول هم در خروجی داشته باشید.
+        </div>
+
+        <p class="section-label">📁 فایل اول</p>
+        <div class="upload-section" id="intUp1">
+            <span style="font-size:28px;">📂</span><br>
+            <span id="intSt1">انتخاب فایل اول</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleIntFile(this,1)">
+        </div>
+        <div id="intCtrl1" style="display:none;">
+            <p class="section-label">ستون کلید در فایل اول:</p>
+            <select id="intCol1" onchange="checkIntReady()"></select>
+            <p class="section-label">ستون‌های اضافی از فایل اول در خروجی (اختیاری):</p>
+            <select id="intExtraCols" multiple style="height:90px; font-size:12px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); color:white; border-radius:14px; width:100%; padding:8px; font-family:Vazirmatn; margin-top:6px;"></select>
+            <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">برای انتخاب چند ستون Ctrl نگه دارید</small>
+        </div>
+
+        <p class="section-label">📁 فایل دوم</p>
+        <div class="upload-section" id="intUp2">
+            <span style="font-size:28px;">📂</span><br>
+            <span id="intSt2">انتخاب فایل دوم</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleIntFile(this,2)">
+        </div>
+        <div id="intCtrl2" style="display:none;">
+            <p class="section-label">ستون کلید در فایل دوم:</p>
+            <select id="intCol2" onchange="checkIntReady()"></select>
+        </div>
+
+        <button id="btnInt" class="main-btn" onclick="doIntersect()" disabled>🔍 استخراج مشترک‌ها</button>
+        <div class="result-box" id="intResult"></div>
+        <div class="warn-box" id="intWarn"></div>
+        <button onclick="resetIntersect()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 </div>
 
@@ -1175,6 +1216,121 @@ function checkPassword() {
 
 // اجرا هنگام لود صفحه
 loadConfig();
+
+// ===== تب هفتم: اشتراک‌گیری =====
+let intData1 = null, intData2 = null;
+
+async function handleIntFile(input, fileNum) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+
+    if (fileNum === 1) {
+        intData1 = data;
+        const headers = data[0] || [];
+        const selKey = document.getElementById('intCol1');
+        selKey.innerHTML = '<option value="">انتخاب ستون کلید...</option>';
+        headers.forEach((h,i) => selKey.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+        const selExtra = document.getElementById('intExtraCols');
+        selExtra.innerHTML = '';
+        headers.forEach((h,i) => {
+            const opt = document.createElement('option');
+            opt.value = i; opt.textContent = h || 'ستون '+(i+1);
+            selExtra.appendChild(opt);
+        });
+        document.getElementById('intUp1').style.display = 'none';
+        document.getElementById('intSt1').textContent = '✅ ' + file.name;
+        document.getElementById('intCtrl1').style.display = 'block';
+    } else {
+        intData2 = data;
+        const headers = data[0] || [];
+        const selKey = document.getElementById('intCol2');
+        selKey.innerHTML = '<option value="">انتخاب ستون کلید...</option>';
+        headers.forEach((h,i) => selKey.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+        document.getElementById('intUp2').style.display = 'none';
+        document.getElementById('intSt2').textContent = '✅ ' + file.name;
+        document.getElementById('intCtrl2').style.display = 'block';
+    }
+    checkIntReady();
+}
+
+function checkIntReady() {
+    const c1 = document.getElementById('intCol1').value;
+    const c2 = document.getElementById('intCol2').value;
+    document.getElementById('btnInt').disabled = !(intData1 && intData2 && c1 !== '' && c2 !== '');
+}
+
+function doIntersect() {
+    const col1 = parseInt(document.getElementById('intCol1').value);
+    const col2 = parseInt(document.getElementById('intCol2').value);
+    const btn  = document.getElementById('btnInt');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const extraSel = document.getElementById('intExtraCols');
+    const extraCols = Array.from(extraSel.selectedOptions).map(o => parseInt(o.value));
+
+    const headers1 = intData1[0] || [];
+
+    // ساخت Set از مقادیر نرمال‌شده فایل دوم
+    const set2 = new Set();
+    for (let i = 1; i < intData2.length; i++) {
+        const val = normalizeKey(intData2[i][col2]);
+        if (val) set2.add(val);
+    }
+
+    // هدر خروجی: ستون کلید + ستون‌های اضافی
+    const outHeaders = [headers1[col1] || 'ستون کلید'];
+    extraCols.forEach(c => { if (c !== col1) outHeaders.push(headers1[c] || 'ستون '+(c+1)); });
+
+    const outRows = [outHeaders];
+    let matchCount = 0;
+
+    for (let i = 1; i < intData1.length; i++) {
+        const row = intData1[i];
+        const val = normalizeKey(row[col1]);
+        if (!val) continue;
+        if (set2.has(val)) {
+            const outRow = [row[col1]];
+            extraCols.forEach(c => { if (c !== col1) outRow.push(row[c] ?? ''); });
+            outRows.push(outRow);
+            matchCount++;
+        }
+    }
+
+    document.getElementById('intWarn').style.display = 'none';
+    document.getElementById('intResult').style.display = 'none';
+
+    if (matchCount === 0) {
+        const w = document.getElementById('intWarn');
+        w.style.display = 'block';
+        w.innerHTML = `⚠️ هیچ مقدار مشترکی پیدا نشد!<br><small>مطمئن شوید ستون‌های درست را انتخاب کرده‌اید.</small>`;
+        btn.innerText = '🔍 استخراج مشترک‌ها'; btn.disabled = false;
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(outRows), 'مشترک‌ها');
+    XLSX.writeFile(wb, 'Intersection_Result.xlsx');
+
+    const r = document.getElementById('intResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل آماده شد!<br>
+        🟢 تعداد مقادیر مشترک: <b>${matchCount}</b><br>
+        📊 از ${intData1.length-1} ردیف فایل اول و ${set2.size} مقدار یکتا در فایل دوم`;
+
+    btn.innerText = '✅ دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText='🔍 استخراج مشترک‌ها'; btn.classList.remove('success'); btn.disabled=false; }, 3000);
+}
+
+function resetIntersect() {
+    intData1 = null; intData2 = null;
+    ['intCtrl1','intCtrl2'].forEach(id => document.getElementById(id).style.display='none');
+    ['intUp1','intUp2'].forEach(id => document.getElementById(id).style.display='block');
+    document.getElementById('intSt1').textContent = 'انتخاب فایل اول';
+    document.getElementById('intSt2').textContent = 'انتخاب فایل دوم';
+    ['intResult','intWarn'].forEach(id => document.getElementById(id).style.display='none');
+    document.getElementById('btnInt').disabled = true;
+}
 
 </script>
 </body>
