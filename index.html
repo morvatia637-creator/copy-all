@@ -4,177 +4,483 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excel Pro Suite | ابزار پیشرفته اکسل</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet"/>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
-            --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc;
-            --success: #10b981; --danger: #ef4444;
-            --glass: rgba(30, 41, 59, 0.8); --border: rgba(255, 255, 255, 0.1);
+            --p:       #6366f1;
+            --p2:      #818cf8;
+            --acc:     #a78bfa;
+            --acc2:    #c084fc;
+            --ok:      #10b981;
+            --err:     #f43f5e;
+            --warn:    #f59e0b;
+            --bg:      #06080f;
+            --bg2:     #0d111e;
+            --surface: rgba(15,20,40,0.85);
+            --surface2:rgba(20,28,55,0.6);
+            --border:  rgba(99,102,241,0.18);
+            --border2: rgba(255,255,255,0.06);
+            --text:    #e2e8f0;
+            --muted:   #64748b;
+            --soft:    #94a3b8;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin:0; padding:0; }
+
         body {
-            font-family: 'Vazirmatn', sans-serif;
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
-            color: #f1f5f9; margin: 0; display: flex; flex-direction: column;
-            align-items: center; min-height: 100vh; padding: 15px;
+            font-family: "Vazirmatn", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 12px 40px;
+            overflow-x: hidden;
         }
+
+        /* پس‌زمینه متحرک */
+        body::before {
+            content: "";
+            position: fixed; inset: 0; z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 10% -10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 90% 100%, rgba(168,85,247,0.14) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 70%),
+                var(--bg2);
+            animation: bgShift 12s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0%   { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(20deg); }
+        }
+
+        /* کانتینر اصلی */
         .container {
-            width: 100%; max-width: 520px; background: var(--glass);
-            backdrop-filter: blur(16px); border-radius: 32px; padding: 25px;
-            border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            width: 100%; max-width: 540px;
+            background: var(--surface);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            box-shadow:
+                0 0 0 1px rgba(99,102,241,0.08),
+                0 32px 64px -16px rgba(0,0,0,0.7),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            overflow: hidden;
         }
+
+        /* هدر */
+        .app-header {
+            padding: 28px 28px 0;
+            text-align: center;
+            position: relative;
+        }
+        .app-header-glow {
+            position: absolute;
+            top: -20px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 60px;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .app-logo {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--p), var(--acc2));
+            border-radius: 16px;
+            font-size: 22px;
+            box-shadow: 0 8px 24px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            margin-bottom: 12px;
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%,100% { box-shadow: 0 8px 24px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+            50%      { box-shadow: 0 8px 32px rgba(99,102,241,0.65), inset 0 1px 0 rgba(255,255,255,0.2); }
+        }
+        .app-title {
+            font-family: "Outfit", "Vazirmatn", sans-serif;
+            font-size: 24px; font-weight: 900; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #a5b4fc 0%, var(--acc2) 50%, #818cf8 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .app-subtitle {
+            font-size: 11px; color: var(--muted); margin-top: 4px; margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        /* نوار تب‌ها - اسکرول افقی */
+        .tabs-wrapper {
+            padding: 0 16px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tabs-wrapper::-webkit-scrollbar { display: none; }
         .tabs {
-            display: flex; background: rgba(15,23,42,0.5); padding: 5px;
-            border-radius: 16px; margin-bottom: 25px; gap: 5px; flex-wrap: wrap;
+            display: flex;
+            gap: 4px;
+            background: rgba(6,8,15,0.6);
+            border: 1px solid var(--border2);
+            padding: 4px;
+            border-radius: 14px;
+            min-width: max-content;
         }
         .tab-btn {
-            flex: 1; padding: 10px 6px; border: none; border-radius: 12px;
-            background: transparent; color: #94a3b8; cursor: pointer;
-            font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s; font-size: 12px;
+            flex-shrink: 0;
+            padding: 9px 14px;
+            border: none; border-radius: 10px;
+            background: transparent; color: var(--muted);
+            cursor: pointer; font-family: "Vazirmatn"; font-weight: 700;
+            font-size: 11.5px; transition: all 0.25s ease;
+            white-space: nowrap; position: relative;
         }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
-        header h1 {
-            font-size: 22px; margin: 0 0 20px 0;
-            background: linear-gradient(to left, var(--primary), var(--accent));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            font-weight: 900; text-align: center;
+        .tab-btn:hover:not(.active) {
+            color: var(--soft);
+            background: rgba(255,255,255,0.04);
         }
-        .upload-section {
-            margin: 12px 0; border: 2px dashed #334155; border-radius: 20px;
-            padding: 22px; transition: 0.3s; position: relative;
-            background: rgba(15,23,42,0.4); text-align: center;
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--p), var(--acc));
+            color: white;
+            box-shadow: 0 4px 16px rgba(99,102,241,0.4);
         }
-        .upload-section input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-        .upload-section.uploaded { border-color: var(--success); background: rgba(16,185,129,0.05); }
-        select, input[type="number"] {
-            width: 100%; padding: 13px; background: #1e293b;
-            border: 1px solid var(--border); color: white; border-radius: 14px;
-            font-family: 'Vazirmatn'; margin-top: 10px; outline: none;
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -4px; left: 50%; transform: translateX(-50%);
+            width: 16px; height: 2px;
+            background: linear-gradient(90deg, var(--p), var(--acc2));
+            border-radius: 2px;
         }
-        select option { background: #1e293b; }
-        .main-btn {
-            background: linear-gradient(135deg, var(--primary-dark), var(--accent));
-            color: white; border: none; width: 100%; padding: 17px; border-radius: 18px;
-            font-size: 15px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn';
-            margin-top: 18px; transition: 0.3s;
-        }
-        .main-btn:active { transform: scale(0.96); }
-        .main-btn.success { background: var(--success); }
-        .main-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* محتوای تب */
+        .tab-content { padding: 0 20px 24px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+        /* جعبه اطلاعات */
         .info-box {
-            background: rgba(255,255,255,0.05); padding: 14px; border-radius: 16px;
-            margin-top: 12px; font-size: 12px; line-height: 1.8; color: #cbd5e1;
-            border-right: 4px solid var(--primary);
+            background: linear-gradient(135deg, rgba(99,102,241,0.07), rgba(168,85,247,0.04));
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 14px; padding: 14px 16px;
+            font-size: 12px; line-height: 2; color: #94a3b8;
+            margin-bottom: 16px;
+            position: relative; overflow: hidden;
         }
-        .info-box b { color: var(--primary); }
-        .bar-bg { background: #334155; height: 10px; border-radius: 10px; overflow: hidden; margin: 14px 0; }
-        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.5s; }
-        .section-label { font-size: 12px; color: #94a3b8; margin: 14px 0 0 0; font-weight: bold; }
+        .info-box::before {
+            content: "";
+            position: absolute; right: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--p), var(--acc2));
+            border-radius: 0 3px 3px 0;
+        }
+        .info-box b { color: var(--p2); }
+
+        /* ناحیه آپلود */
+        .upload-section {
+            border: 1.5px dashed rgba(99,102,241,0.3);
+            border-radius: 18px; padding: 28px 20px;
+            text-align: center; cursor: pointer;
+            background: rgba(99,102,241,0.03);
+            position: relative; transition: all 0.25s;
+            margin: 10px 0;
+        }
+        .upload-section:hover {
+            border-color: rgba(99,102,241,0.6);
+            background: rgba(99,102,241,0.07);
+            transform: translateY(-1px);
+        }
+        .upload-section input {
+            position: absolute; inset: 0; opacity: 0;
+            cursor: pointer; width: 100%; height: 100%;
+        }
+        .upload-section.uploaded {
+            border-color: rgba(16,185,129,0.5);
+            background: rgba(16,185,129,0.05);
+        }
+        .upload-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+        .upload-text { font-size: 13px; color: var(--soft); }
+
+        /* فیلدها */
+        select, input[type="number"] {
+            width: 100%; padding: 13px 16px;
+            background: rgba(6,8,15,0.7);
+            border: 1px solid var(--border);
+            color: var(--text); border-radius: 12px;
+            font-family: "Vazirmatn"; font-size: 13px;
+            margin-top: 10px; outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+        }
+        select:focus, input[type="number"]:focus {
+            border-color: var(--p2);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        select option { background: #0d111e; }
+
+        /* برچسب بخش */
+        .section-label {
+            font-size: 11.5px; color: var(--muted);
+            margin: 16px 0 0; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .section-label::after {
+            content: "";
+            flex: 1; height: 1px;
+            background: linear-gradient(to left, transparent, var(--border));
+        }
+
+        /* دکمه اصلی */
+        .main-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--p) 0%, var(--acc) 100%);
+            color: white; border: none; border-radius: 14px;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; font-family: "Vazirmatn";
+            margin-top: 18px; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+            position: relative; overflow: hidden;
+        }
+        .main-btn::before {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .main-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(99,102,241,0.45);
+        }
+        .main-btn:active:not(:disabled) { transform: scale(0.97); }
+        .main-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .main-btn.success {
+            background: linear-gradient(135deg, #059669, #10b981) !important;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.35) !important;
+        }
+
+        /* نوار پیشرفت */
+        .bar-bg {
+            background: rgba(255,255,255,0.06);
+            height: 6px; border-radius: 99px;
+            overflow: hidden; margin: 14px 0;
+        }
+        .bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--p), var(--acc2));
+            transition: width 0.5s ease;
+            border-radius: 99px;
+        }
+
+        /* باکس نتیجه */
         .result-box {
-            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
-            border-radius: 14px; padding: 14px; margin-top: 14px; font-size: 13px;
-            line-height: 1.9; color: #6ee7b7; display: none;
+            background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03));
+            border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 14px; padding: 14px 16px;
+            margin-top: 14px; font-size: 13px;
+            line-height: 2; color: #6ee7b7; display: none;
         }
         .warn-box {
-            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 14px; padding: 12px; margin-top: 12px; font-size: 12px;
-            line-height: 1.9; color: #fca5a5; display: none;
+            background: linear-gradient(135deg, rgba(244,63,94,0.08), rgba(244,63,94,0.03));
+            border: 1px solid rgba(244,63,94,0.25);
+            border-radius: 14px; padding: 12px 16px;
+            margin-top: 12px; font-size: 12px;
+            line-height: 1.9; color: #fda4af; display: none;
         }
-        /* پیش‌نمایش ستون */
-        .preview-box {
-            background: rgba(15,23,42,0.8); border: 1px solid #334155;
-            border-radius: 12px; padding: 10px 12px; margin-top: 8px;
-            font-size: 11px; line-height: 1.8; direction: ltr;
-            font-family: monospace; color: #94a3b8; display: none;
-        }
-        .preview-box .pv-val { color: #e2e8f0; }
-        .preview-box .pv-type { color: #475569; font-size: 10px; }
-        .preview-box .pv-head { color: #818cf8; font-weight: bold; margin-bottom: 4px; display: block; font-family: 'Vazirmatn'; font-size: 11px; direction: rtl; }
-        footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
 
-        /* صفحه رمز عبور */
+        /* پریویو ستون */
+        .preview-box {
+            background: rgba(6,8,15,0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 10px 14px;
+            margin-top: 8px; font-size: 11px;
+            line-height: 1.9; direction: ltr;
+            font-family: "Courier New", monospace;
+            color: var(--muted); display: none;
+        }
+        .preview-box .pv-val  { color: #e2e8f0; }
+        .preview-box .pv-type { color: #334155; font-size: 10px; }
+        .preview-box .pv-head {
+            color: var(--p2); font-weight: 700;
+            margin-bottom: 6px; display: block;
+            font-family: "Vazirmatn"; font-size: 11px; direction: rtl;
+        }
+
+        /* چیپ فایل */
+        .file-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(99,102,241,0.07);
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 12px; padding: 10px 14px;
+            margin-bottom: 7px; font-size: 12px; color: #c7d2fe;
+        }
+        .file-chip .fc-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .file-chip .fc-rows { color:var(--muted); font-size:11px; white-space:nowrap; }
+        .file-chip .fc-del  { background:none; border:none; color:var(--err); cursor:pointer; font-size:14px; padding:0; }
+
+        /* دکمه ریست */
+        .reset-btn {
+            background: none; border: none;
+            color: var(--err); font-family: "Vazirmatn";
+            font-size: 12px; width: 100%;
+            margin-top: 14px; cursor: pointer;
+            padding: 6px; border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .reset-btn:hover { background: rgba(244,63,94,0.08); }
+
+        /* انتخاب چند گانه */
+        select[multiple] {
+            height: 96px !important;
+            padding: 6px 10px !important;
+        }
+        select[multiple] option {
+            padding: 5px 6px;
+            border-radius: 6px;
+            margin: 1px 0;
+        }
+        select[multiple] option:checked {
+            background: var(--p) !important;
+            color: white;
+        }
+
+        /* ======= صفحه قفل ======= */
         .lock-screen {
             position: fixed; inset: 0; z-index: 9999;
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
             display: flex; align-items: center; justify-content: center;
-            font-family: 'Vazirmatn', sans-serif;
+            font-family: "Vazirmatn", sans-serif;
+        }
+        .lock-screen::before {
+            content: "";
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.2), transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(168,85,247,0.15), transparent 55%),
+                #06080f;
         }
         .lock-box {
-            background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 28px; padding: 40px 30px; width: 300px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+            position: relative; z-index: 1;
+            background: rgba(13,17,30,0.9);
+            border: 1px solid var(--border);
+            border-radius: 28px; padding: 44px 32px;
+            width: 320px; text-align: center;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.08);
+            backdrop-filter: blur(20px);
         }
-        .lock-box h2 {
-            margin: 0 0 8px 0; font-size: 18px;
-            background: linear-gradient(to left, #818cf8, #c084fc);
+        .lock-logo {
+            width: 60px; height: 60px; margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--p), var(--acc2));
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 12px 32px rgba(99,102,241,0.45);
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        .lock-title {
+            font-family: "Outfit", "Vazirmatn", sans-serif;
+            font-size: 22px; font-weight: 900;
+            background: linear-gradient(135deg, #a5b4fc, var(--acc2));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            font-weight: 900;
+            margin-bottom: 6px;
         }
-        .lock-box p { color: #64748b; font-size: 12px; margin: 0 0 24px 0; }
+        .lock-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
         .lock-box input[type="password"] {
-            width: 100%; padding: 14px; background: #1e293b;
-            border: 1px solid rgba(255,255,255,0.1); color: white;
-            border-radius: 14px; font-family: 'Vazirmatn'; font-size: 16px;
-            outline: none; text-align: center; letter-spacing: 4px;
-            margin-bottom: 12px;
+            width: 100%; padding: 14px; margin-bottom: 12px;
+            background: rgba(6,8,15,0.8);
+            border: 1px solid var(--border);
+            color: white; border-radius: 14px;
+            font-family: "Vazirmatn"; font-size: 18px;
+            outline: none; text-align: center; letter-spacing: 6px;
+            transition: border-color 0.2s;
         }
-        .lock-box input[type="password"]::placeholder { letter-spacing: 0; font-size: 13px; color: #475569; }
-        .lock-box input[type="password"].shake {
-            animation: shake 0.4s ease;
-            border-color: #ef4444;
-        }
+        .lock-box input[type="password"]::placeholder { letter-spacing: 0; font-size: 13px; color: #334155; }
+        .lock-box input[type="password"]:focus { border-color: var(--p2); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+        .lock-box input[type="password"].shake { animation: shake 0.4s ease; border-color: var(--err); }
         .lock-btn {
-            background: linear-gradient(135deg, #6366f1, #c084fc);
-            color: white; border: none; width: 100%; padding: 14px;
-            border-radius: 14px; font-size: 14px; font-weight: bold;
-            cursor: pointer; font-family: 'Vazirmatn'; transition: 0.2s;
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--p), var(--acc));
+            color: white; border: none; border-radius: 14px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            font-family: "Vazirmatn"; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(99,102,241,0.35);
         }
-        .lock-btn:active { transform: scale(0.97); }
-        .lock-error { color: #ef4444; font-size: 12px; margin-top: 10px; height: 16px; }
+        .lock-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(99,102,241,0.5); }
+        .lock-error { color: #fda4af; font-size: 12px; margin-top: 10px; height: 16px; }
         @keyframes shake {
             0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
-            40%{transform:translateX(8px)} 60%{transform:translateX(-6px)}
-            80%{transform:translateX(6px)}
+            40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
         }
-        .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 12px; cursor: pointer; }
 
-        /* لیست فایل‌های ترکیب */
-        .file-chip {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
-            border-radius: 12px; padding: 10px 14px; margin-bottom: 7px;
-            font-size: 12px; color: #c7d2fe;
+        /* ======= فوتر ======= */
+        .pro-footer {
+            width: 100%; max-width: 540px;
+            margin: 20px auto 0; padding: 0 4px;
         }
-        .file-chip .fc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .file-chip .fc-rows { color: #64748b; font-size: 11px; margin-right: 8px; white-space: nowrap; }
-        .file-chip .fc-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 0 0 4px; }
+        .footer-inner {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            background: rgba(13,17,30,0.7);
+            border: 1px solid var(--border2);
+            border-radius: 18px; padding: 14px 18px;
+            backdrop-filter: blur(12px);
+        }
+        .footer-brand { display: flex; align-items: center; gap: 10px; }
+        .footer-logo-sm {
+            width: 30px; height: 30px; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--p), var(--acc2));
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; font-size: 13px;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        }
+        .footer-title {
+            font-family: "Outfit", "Vazirmatn", sans-serif;
+            font-size: 12px; font-weight: 800;
+            background: linear-gradient(to left, var(--p2), var(--acc2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .footer-sub { font-size: 10px; color: #2d3a52; margin-top: 1px; }
+        .footer-badges { display: flex; gap: 5px; flex-shrink: 0; }
+        .footer-badge {
+            padding: 3px 8px; border-radius: 6px; font-size: 10px; font-family: "Vazirmatn";
+            background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.18);
+            color: var(--p2);
+        }
+        .footer-badge.green {
+            background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.2);
+            color: #34d399;
+        }
+        .footer-note {
+            text-align: center; font-size: 10px; color: #1e293b;
+            margin-top: 8px; font-family: "Vazirmatn";
+        }
     </style>
 </head>
 <body>
+
 <!-- صفحه قفل -->
 <div class="lock-screen" id="lockScreen">
     <div class="lock-box">
-        <h2>Excel Pro Suite</h2>
-        <p>برای ورود رمز عبور را وارد کنید</p>
+        <div class="lock-logo">⚡</div>
+        <div class="lock-title">Excel Pro Suite</div>
+        <div class="lock-sub">برای ورود رمز عبور را وارد کنید</div>
         <input type="password" id="pwdInput" placeholder="رمز عبور" onkeydown="if(event.key==='Enter') checkPassword()">
-        <button class="lock-btn" onclick="checkPassword()">🔓 ورود</button>
+        <button class="lock-btn" onclick="checkPassword()">ورود به ابزار</button>
         <div class="lock-error" id="lockError"></div>
     </div>
 </div>
 
 <div class="container">
-    <header><h1>Excel Pro Suite</h1></header>
-    <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی هوشمند</button>
-        <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
-        <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام فایل‌ها</button>
-        <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب فایل‌ها</button>
-        <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
-        <button class="tab-btn" onclick="openTab('nidTab',this)">🪪 کدملی</button>
-        <button class="tab-btn" onclick="openTab('intersectTab',this)">🔍 اشتراک</button>
-        <button class="tab-btn" onclick="openTab('dedupTab',this)">🧹 حذف تکراری</button>
+    <div class="app-header">
+        <div class="app-header-glow"></div>
+        <div class="app-logo">⚡</div>
+        <div class="app-title">Excel Pro Suite</div>
+        <div class="app-subtitle">ابزار هوشمند پردازش داده — کاملاً آفلاین</div>
+    </div>
+
+    <div class="tabs-wrapper">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی</button>
+            <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
+            <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام</button>
+            <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب</button>
+            <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
+            <button class="tab-btn" onclick="openTab('nidTab',this)">🪪 کدملی</button>
+            <button class="tab-btn" onclick="openTab('intersectTab',this)">🔍 اشتراک</button>
+            <button class="tab-btn" onclick="openTab('dedupTab',this)">🧹 حذف تکراری</button>
+        </div>
     </div>
 
     <!-- تب اول -->
@@ -184,14 +490,15 @@
             • داده‌ها در بسته‌های ۷۰۰۰ تایی (قابل تغییر) آماده کپی می‌شوند.
         </div>
         <div class="upload-section" id="upArea1">
-            <span style="font-size:30px;">📂</span><br><span id="st1">انتخاب فایل برای کپی</span>
+            <span class="upload-icon">📂</span>
+            <span class="upload-text" id="st1">انتخاب فایل برای کپی</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'copy')">
         </div>
         <div id="copyControls" style="display:none;">
             <select id="colSelectCopy"></select>
             <input type="number" id="chunkSize" value="7000" placeholder="تعداد در هر کپی">
             <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
-            <button id="btnCopy" class="main-btn">کپی بسته اول</button>
+            <button id="btnCopy" class="main-btn">📋 کپی بسته اول</button>
             <button onclick="location.reload()" class="reset-btn">❌ حذف فایل و شروع مجدد</button>
         </div>
     </div>
@@ -204,7 +511,8 @@
             • ردیف‌های بدون شماره معتبر <b>حذف</b> خواهند شد.
         </div>
         <div class="upload-section" id="upArea2">
-            <span style="font-size:30px;">📱</span><br><span id="st2">انتخاب فایل برای اصلاح شماره</span>
+            <span class="upload-icon">📱</span>
+            <span class="upload-text" id="st2">انتخاب فایل برای اصلاح شماره</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'fixer')">
         </div>
         <div id="fixerControls" style="display:none;">
@@ -220,62 +528,59 @@
             • ستون مشترک را در هر دو فایل انتخاب کنید — <b>پیش‌نمایش مقادیر</b> نشان داده می‌شود.<br>
             • ستون شماره تلفن در فایل دوم را انتخاب کنید.
         </div>
-
         <p class="section-label">📁 فایل اول</p>
         <div class="upload-section" id="mergeUp1">
-            <span style="font-size:28px;">📂</span><br><span id="mergeSt1">انتخاب فایل اول</span>
+            <span class="upload-icon">📂</span>
+            <span class="upload-text" id="mergeSt1">انتخاب فایل اول</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,1)">
         </div>
         <div id="mergeCtrl1" style="display:none;">
-            <p class="section-label">ستون مشترک در فایل اول:</p>
+            <p class="section-label">ستون مشترک در فایل اول</p>
             <select id="mergeCol1" onchange="onColChange(this,'preview1','f1')"></select>
             <div class="preview-box" id="preview1"></div>
         </div>
-
         <p class="section-label">📁 فایل دوم</p>
         <div class="upload-section" id="mergeUp2">
-            <span style="font-size:28px;">📂</span><br><span id="mergeSt2">انتخاب فایل دوم</span>
+            <span class="upload-icon">📂</span>
+            <span class="upload-text" id="mergeSt2">انتخاب فایل دوم</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,2)">
         </div>
         <div id="mergeCtrl2" style="display:none;">
-            <p class="section-label">ستون مشترک در فایل دوم:</p>
+            <p class="section-label">ستون مشترک در فایل دوم</p>
             <select id="mergeCol2Key" onchange="onColChange(this,'preview2key','f2')"></select>
             <div class="preview-box" id="preview2key"></div>
-            <p class="section-label">ستون شماره تلفن در فایل دوم:</p>
+            <p class="section-label">ستون شماره تلفن در فایل دوم</p>
             <select id="mergeCol2Phone" onchange="onColChange(this,'preview2phone','f2'); checkMergeReady()"></select>
             <div class="preview-box" id="preview2phone"></div>
         </div>
-
         <button id="btnMerge" class="main-btn" onclick="doMerge()" disabled>🔗 ادغام و دانلود فایل نهایی</button>
         <div class="result-box" id="mergeResult"></div>
         <div class="warn-box" id="mergeWarn"></div>
         <button onclick="resetMerge()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 
-    <!-- تب چهارم: ترکیب فایل‌ها -->
+    <!-- تب چهارم: ترکیب -->
     <div id="combineTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • چند فایل اکسل انتخاب کنید (۲ فایل یا بیشتر).<br>
             • ستون‌ها بر اساس <b>هدر</b> تطبیق داده می‌شوند.<br>
-            • ردیف‌های کاملاً خالی <b>حذف</b> می‌شوند.<br>
-            • یک فایل ترکیبی دانلود می‌شود.
+            • ردیف‌های کاملاً خالی <b>حذف</b> می‌شوند.
         </div>
-
-        <div class="upload-section" id="combineUpArea" style="padding:28px;">
-            <span style="font-size:34px;">📚</span><br>
-            <span id="combineSt">چند فایل را با هم انتخاب کنید</span><br>
-            <small style="color:#64748b;font-size:11px;">می‌توانید چند فایل را همزمان انتخاب کنید</small>
+        <div class="upload-section" id="combineUpArea">
+            <span class="upload-icon">📚</span>
+            <span class="upload-text" id="combineSt">چند فایل را با هم انتخاب کنید</span><br>
+            <small style="color:var(--muted);font-size:11px;">می‌توانید چند فایل را همزمان انتخاب کنید</small>
             <input type="file" accept=".xlsx,.xls,.csv" multiple onchange="handleCombineFiles(this)">
         </div>
-
         <div id="combineFileList" style="display:none;">
-            <p class="section-label">📋 فایل‌های انتخاب‌شده:</p>
+            <p class="section-label">📋 فایل‌های انتخاب‌شده</p>
             <div id="combineListItems" style="margin-top:8px;"></div>
-            <button id="btnCombine" class="main-btn" onclick="doCombine()">📚 ترکیب و دانلود فایل نهایی</button>
+            <button id="btnCombine" class="main-btn" onclick="doCombine()">📚 ترکیب و دانلود</button>
             <div class="result-box" id="combineResult"></div>
             <button onclick="resetCombine()" class="reset-btn">❌ شروع مجدد</button>
         </div>
     </div>
+
     <!-- تب پنجم: تفکیک استانی -->
     <div id="splitTab" class="tab-content" style="display:none;">
         <div class="info-box">
@@ -285,12 +590,12 @@
             • شماره‌های ناشناس در فایل <b>نامشخص</b> ذخیره می‌شوند.
         </div>
         <div class="upload-section" id="splitUpArea">
-            <span style="font-size:30px;">🗺️</span><br>
-            <span id="splitSt">انتخاب فایل اکسل</span>
+            <span class="upload-icon">🗺️</span>
+            <span class="upload-text" id="splitSt">انتخاب فایل اکسل</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleSplitFile(this)">
         </div>
         <div id="splitControls" style="display:none;">
-            <p class="section-label">ستون شماره تلفن:</p>
+            <p class="section-label">ستون شماره تلفن</p>
             <select id="splitPhoneCol" onchange="checkSplitReady()"></select>
             <button id="btnSplit" class="main-btn" onclick="doSplit()" disabled>🗺️ تفکیک و دانلود ZIP</button>
             <div class="result-box" id="splitResult"></div>
@@ -298,22 +603,22 @@
         </div>
     </div>
 
-    <!-- تب ششم: تفکیک کدملی -->
+    <!-- تب ششم: کدملی -->
     <div id="nidTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • فایل اکسل را آپلود کنید و ستون کدملی را انتخاب کنید.<br>
             • یک فایل <b>ZIP</b> دریافت می‌کنید.<br>
             • داخل ZIP: هر استان یک <b>پوشه</b> دارد.<br>
-            • داخل هر پوشه: یک فایل کلی استان + فایل جداگانه هر شهر.
+            • داخل هر پوشه: فایل کلی استان + فایل جداگانه هر شهر.
         </div>
         <div id="nidDbStatus" class="warn-box" style="display:none;"></div>
         <div class="upload-section" id="nidUpArea">
-            <span style="font-size:30px;">🪪</span><br>
-            <span id="nidSt">انتخاب فایل اکسل</span>
+            <span class="upload-icon">🪪</span>
+            <span class="upload-text" id="nidSt">انتخاب فایل اکسل</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleNidFile(this)">
         </div>
         <div id="nidControls" style="display:none;">
-            <p class="section-label">ستون کدملی:</p>
+            <p class="section-label">ستون کدملی</p>
             <select id="nidCol" onchange="checkNidReady()"></select>
             <button id="btnNid" class="main-btn" onclick="doNidSplit()" disabled>🪪 تفکیک و دانلود ZIP</button>
             <div class="result-box" id="nidResult"></div>
@@ -322,7 +627,7 @@
         </div>
     </div>
 
-    <!-- تب هفتم: اشتراک‌گیری -->
+    <!-- تب هفتم: اشتراک -->
     <div id="intersectTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • دو فایل اکسل آپلود کنید.<br>
@@ -330,32 +635,29 @@
             • مقادیر <b>مشترک</b> بین دو ستون استخراج می‌شوند.<br>
             • می‌توانید ستون‌های بیشتری از فایل اول هم در خروجی داشته باشید.
         </div>
-
         <p class="section-label">📁 فایل اول</p>
         <div class="upload-section" id="intUp1">
-            <span style="font-size:28px;">📂</span><br>
-            <span id="intSt1">انتخاب فایل اول</span>
+            <span class="upload-icon">📂</span>
+            <span class="upload-text" id="intSt1">انتخاب فایل اول</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleIntFile(this,1)">
         </div>
         <div id="intCtrl1" style="display:none;">
-            <p class="section-label">ستون کلید در فایل اول:</p>
+            <p class="section-label">ستون کلید در فایل اول</p>
             <select id="intCol1" onchange="checkIntReady()"></select>
-            <p class="section-label">ستون‌های اضافی از فایل اول در خروجی (اختیاری):</p>
-            <select id="intExtraCols" multiple style="height:90px; font-size:12px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); color:white; border-radius:14px; width:100%; padding:8px; font-family:Vazirmatn; margin-top:6px;"></select>
-            <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">برای انتخاب چند ستون Ctrl نگه دارید</small>
+            <p class="section-label">ستون‌های اضافی در خروجی (اختیاری)</p>
+            <select id="intExtraCols" multiple></select>
+            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px;">Ctrl نگه دارید برای انتخاب چند ستون</small>
         </div>
-
         <p class="section-label">📁 فایل دوم</p>
         <div class="upload-section" id="intUp2">
-            <span style="font-size:28px;">📂</span><br>
-            <span id="intSt2">انتخاب فایل دوم</span>
+            <span class="upload-icon">📂</span>
+            <span class="upload-text" id="intSt2">انتخاب فایل دوم</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleIntFile(this,2)">
         </div>
         <div id="intCtrl2" style="display:none;">
-            <p class="section-label">ستون کلید در فایل دوم:</p>
+            <p class="section-label">ستون کلید در فایل دوم</p>
             <select id="intCol2" onchange="checkIntReady()"></select>
         </div>
-
         <button id="btnInt" class="main-btn" onclick="doIntersect()" disabled>🔍 استخراج مشترک‌ها</button>
         <div class="result-box" id="intResult"></div>
         <div class="warn-box" id="intWarn"></div>
@@ -367,22 +669,21 @@
         <div class="info-box">
             • فایل اکسل را آپلود کنید.<br>
             • یک یا چند ستون برای تشخیص تکراری انتخاب کنید.<br>
-            • انتخاب کنید کدام نسخه نگه داشته شود: <b>اول</b> یا <b>آخر</b>.<br>
-            • فایل پاکسازی‌شده دانلود می‌شود.
+            • انتخاب کنید کدام نسخه نگه داشته شود: <b>اول</b> یا <b>آخر</b>.
         </div>
         <div class="upload-section" id="dedupUpArea">
-            <span style="font-size:30px;">🧹</span><br>
-            <span id="dedupSt">انتخاب فایل اکسل</span>
+            <span class="upload-icon">🧹</span>
+            <span class="upload-text" id="dedupSt">انتخاب فایل اکسل</span>
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleDedupFile(this)">
         </div>
         <div id="dedupControls" style="display:none;">
-            <p class="section-label">ستون‌های تشخیص تکراری:</p>
-            <select id="dedupCols" multiple style="height:100px; font-size:12px; background:#1e293b; border:1px solid rgba(255,255,255,0.1); color:white; border-radius:14px; width:100%; padding:8px; font-family:Vazirmatn; margin-top:6px;"></select>
-            <small style="color:#64748b;font-size:11px;display:block;margin-top:4px;">برای انتخاب چند ستون Ctrl نگه دارید</small>
+            <p class="section-label">ستون‌های تشخیص تکراری</p>
+            <select id="dedupCols" multiple></select>
+            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px;">Ctrl نگه دارید برای انتخاب چند ستون</small>
             <p class="section-label">کدام نسخه نگه داشته شود؟</p>
             <select id="dedupKeep">
-                <option value="first">اولین ردیف (نگه داشتن اول)</option>
-                <option value="last">آخرین ردیف (نگه داشتن آخر)</option>
+                <option value="first">اولین ردیف</option>
+                <option value="last">آخرین ردیف</option>
             </select>
             <button id="btnDedup" class="main-btn" onclick="doDedup()">🧹 حذف تکراری و دانلود</button>
             <div class="result-box" id="dedupResult"></div>
@@ -391,7 +692,22 @@
     </div>
 </div>
 
-<footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
+<footer class="pro-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <div class="footer-logo-sm">⚡</div>
+            <div>
+                <div class="footer-title">Excel Pro Suite</div>
+                <div class="footer-sub">ابزار هوشمند مدیریت داده</div>
+            </div>
+        </div>
+        <div class="footer-badges">
+            <span class="footer-badge green">🔒 آفلاین</span>
+            <span class="footer-badge">v2.0</span>
+        </div>
+    </div>
+    <div class="footer-note">تمام پردازش‌ها روی مرورگر شما انجام می‌شود · هیچ داده‌ای ارسال نمی‌شود</div>
+</footer>
 
 <script>
 // ===== ابزار مشترک =====
