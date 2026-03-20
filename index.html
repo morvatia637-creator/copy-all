@@ -9,65 +9,107 @@
     <style>
         :root {
             --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc;
-            --success: #10b981; --danger: #ef4444; --bg: #0f172a;
+            --success: #10b981; --danger: #ef4444;
             --glass: rgba(30, 41, 59, 0.8); --border: rgba(255, 255, 255, 0.1);
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: 'Vazirmatn', sans-serif; background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
-            color: #f1f5f9; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px;
+            font-family: 'Vazirmatn', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: #f1f5f9; margin: 0; display: flex; flex-direction: column;
+            align-items: center; min-height: 100vh; padding: 15px;
         }
-
-        .container { width: 100%; max-width: 500px; background: var(--glass); backdrop-filter: blur(16px); border-radius: 32px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-
-        .tabs { display: flex; background: rgba(15, 23, 42, 0.5); padding: 5px; border-radius: 16px; margin-bottom: 25px; gap: 5px; flex-wrap: wrap; }
-        .tab-btn { flex: 1; padding: 10px 6px; border: none; border-radius: 12px; background: transparent; color: #94a3b8; cursor: pointer; font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s; font-size: 12px; min-width: 80px; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-
-        header h1 { font-size: 22px; margin: 0; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
-
-        .upload-section { margin: 15px 0; border: 2px dashed #334155; border-radius: 20px; padding: 25px; transition: 0.3s; position: relative; background: rgba(15, 23, 42, 0.4); text-align: center; }
+        .container {
+            width: 100%; max-width: 520px; background: var(--glass);
+            backdrop-filter: blur(16px); border-radius: 32px; padding: 25px;
+            border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .tabs {
+            display: flex; background: rgba(15,23,42,0.5); padding: 5px;
+            border-radius: 16px; margin-bottom: 25px; gap: 5px; flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px 6px; border: none; border-radius: 12px;
+            background: transparent; color: #94a3b8; cursor: pointer;
+            font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s;
+            font-size: 12px; min-width: 80px;
+        }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+        header h1 {
+            font-size: 22px; margin: 0 0 20px 0;
+            background: linear-gradient(to left, var(--primary), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-weight: 900; text-align: center;
+        }
+        .upload-section {
+            margin: 12px 0; border: 2px dashed #334155; border-radius: 20px;
+            padding: 22px; transition: 0.3s; position: relative;
+            background: rgba(15,23,42,0.4); text-align: center;
+        }
         .upload-section input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-        .upload-section.uploaded { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
-
-        select, input[type="number"] { width: 100%; padding: 14px; background: #1e293b; border: 1px solid var(--border); color: white; border-radius: 14px; font-family: 'Vazirmatn'; margin-top: 10px; outline: none; }
+        .upload-section.uploaded { border-color: var(--success); background: rgba(16,185,129,0.05); }
+        select, input[type="number"] {
+            width: 100%; padding: 13px; background: #1e293b;
+            border: 1px solid var(--border); color: white; border-radius: 14px;
+            font-family: 'Vazirmatn'; margin-top: 10px; outline: none;
+        }
         select option { background: #1e293b; }
-
-        .main-btn { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn'; margin-top: 20px; transition: 0.3s; }
+        .main-btn {
+            background: linear-gradient(135deg, var(--primary-dark), var(--accent));
+            color: white; border: none; width: 100%; padding: 17px; border-radius: 18px;
+            font-size: 15px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn';
+            margin-top: 18px; transition: 0.3s;
+        }
         .main-btn:active { transform: scale(0.96); }
         .main-btn.success { background: var(--success); }
         .main-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .info-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 16px; margin-top: 15px; font-size: 12px; line-height: 1.8; color: #cbd5e1; border-right: 4px solid var(--primary); }
+        .info-box {
+            background: rgba(255,255,255,0.05); padding: 14px; border-radius: 16px;
+            margin-top: 12px; font-size: 12px; line-height: 1.8; color: #cbd5e1;
+            border-right: 4px solid var(--primary);
+        }
         .info-box b { color: var(--primary); }
-        
-        .bar-bg { background: #334155; height: 10px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        .bar-bg { background: #334155; height: 10px; border-radius: 10px; overflow: hidden; margin: 14px 0; }
         .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.5s; }
-
-        .section-label { font-size: 12px; color: #94a3b8; margin: 15px 0 0 0; font-weight: bold; }
-
-        .result-box { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 14px; margin-top: 15px; font-size: 13px; line-height: 1.9; color: #6ee7b7; display: none; }
-
+        .section-label { font-size: 12px; color: #94a3b8; margin: 14px 0 0 0; font-weight: bold; }
+        .result-box {
+            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 14px; padding: 14px; margin-top: 14px; font-size: 13px;
+            line-height: 1.9; color: #6ee7b7; display: none;
+        }
+        .warn-box {
+            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 14px; padding: 12px; margin-top: 12px; font-size: 12px;
+            line-height: 1.9; color: #fca5a5; display: none; word-break: break-all;
+        }
+        /* باکس دیباگ */
+        .debug-box {
+            background: rgba(15,23,42,0.7); border: 1px solid #334155;
+            border-radius: 14px; padding: 12px; margin-top: 12px; font-size: 11px;
+            line-height: 1.8; color: #94a3b8; display: none; direction: ltr;
+            font-family: monospace; word-break: break-all;
+        }
+        .debug-box .lbl { color: #818cf8; font-weight: bold; }
+        .debug-toggle {
+            background: none; border: 1px solid #334155; color: #64748b;
+            font-family: 'Vazirmatn'; font-size: 11px; border-radius: 10px;
+            padding: 6px 14px; cursor: pointer; margin-top: 10px; width: 100%;
+        }
         footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
-
-        .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 15px; cursor: pointer; }
+        .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <header>
-        <h1>Excel Pro Suite</h1>
-    </header>
+    <header><h1>Excel Pro Suite</h1></header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('copyTab', this)">🚀 کپی هوشمند</button>
-        <button class="tab-btn" onclick="openTab('fixerTab', this)">🔧 اصلاح شماره</button>
-        <button class="tab-btn" onclick="openTab('mergeTab', this)">🔗 ادغام فایل‌ها</button>
+        <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی هوشمند</button>
+        <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
+        <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام فایل‌ها</button>
     </div>
 
-    <!-- تب اول: کپی هوشمند -->
+    <!-- تب اول -->
     <div id="copyTab" class="tab-content">
         <div class="info-box">
             • فایل را آپلود کنید و ستون مورد نظر را انتخاب کنید.<br>
@@ -76,7 +118,7 @@
         <div class="upload-section" id="upArea1">
             <span style="font-size:30px;">📂</span><br>
             <span id="st1">انتخاب فایل برای کپی</span>
-            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this, 'copy')">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'copy')">
         </div>
         <div id="copyControls" style="display:none;">
             <select id="colSelectCopy"></select>
@@ -87,7 +129,7 @@
         </div>
     </div>
 
-    <!-- تب دوم: اصلاح شماره موبایل -->
+    <!-- تب دوم -->
     <div id="fixerTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • ستون شماره تلفن را انتخاب کنید.<br>
@@ -97,7 +139,7 @@
         <div class="upload-section" id="upArea2">
             <span style="font-size:30px;">📱</span><br>
             <span id="st2">انتخاب فایل برای اصلاح شماره</span>
-            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this, 'fixer')">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this,'fixer')">
         </div>
         <div id="fixerControls" style="display:none;">
             <select id="colSelectFixer"></select>
@@ -105,274 +147,359 @@
         </div>
     </div>
 
-    <!-- تب سوم: ادغام فایل‌ها -->
+    <!-- تب سوم -->
     <div id="mergeTab" class="tab-content" style="display:none;">
         <div class="info-box">
             • دو فایل اکسل آپلود کنید.<br>
             • ستون مشترک (مثلاً <b>شناسه</b>) را در هر دو فایل انتخاب کنید.<br>
-            • ستون شماره تلفن در فایل دوم را انتخاب کنید — ردیف‌هایی که شماره ندارند حذف می‌شوند.<br>
+            • ستون شماره تلفن در فایل دوم را انتخاب کنید.<br>
             • شماره‌ها به فرمت <b>09xxxxxxxxx</b> تبدیل می‌شوند.
         </div>
 
-        <!-- فایل اول -->
         <p class="section-label">📁 فایل اول</p>
         <div class="upload-section" id="mergeUp1">
             <span style="font-size:28px;">📂</span><br>
             <span id="mergeSt1">انتخاب فایل اول</span>
-            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this, 1)">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,1)">
         </div>
         <div id="mergeCtrl1" style="display:none;">
-            <p class="section-label">ستون مشترک در فایل اول (مثلاً شناسه):</p>
-            <select id="mergeCol1"></select>
+            <p class="section-label">ستون مشترک در فایل اول:</p>
+            <select id="mergeCol1" onchange="checkMergeReady()"></select>
         </div>
 
-        <!-- فایل دوم -->
         <p class="section-label">📁 فایل دوم</p>
         <div class="upload-section" id="mergeUp2">
             <span style="font-size:28px;">📂</span><br>
             <span id="mergeSt2">انتخاب فایل دوم</span>
-            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this, 2)">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleMergeFile(this,2)">
         </div>
         <div id="mergeCtrl2" style="display:none;">
-            <p class="section-label">ستون مشترک در فایل دوم (مثلاً شناسه):</p>
-            <select id="mergeCol2Key"></select>
-            <p class="section-label">ستون شماره تلفن در فایل دوم (شرط اضافه):</p>
-            <select id="mergeCol2Phone"></select>
+            <p class="section-label">ستون مشترک در فایل دوم:</p>
+            <select id="mergeCol2Key" onchange="checkMergeReady()"></select>
+            <p class="section-label">ستون شماره تلفن در فایل دوم:</p>
+            <select id="mergeCol2Phone" onchange="checkMergeReady()"></select>
         </div>
 
         <button id="btnMerge" class="main-btn" onclick="doMerge()" disabled>🔗 ادغام و دانلود فایل نهایی</button>
+
         <div class="result-box" id="mergeResult"></div>
-        <button onclick="resetMerge()" class="reset-btn" style="margin-top:10px;">❌ شروع مجدد</button>
+        <div class="warn-box" id="mergeWarn"></div>
+
+        <!-- دکمه و باکس دیباگ -->
+        <button class="debug-toggle" id="debugToggleBtn" style="display:none;" onclick="toggleDebug()">🔍 نمایش اطلاعات دیباگ</button>
+        <div class="debug-box" id="debugBox"></div>
+
+        <button onclick="resetMerge()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 </div>
 
 <footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
 
 <script>
-    // ========== متغیرهای تب‌های قدیمی ==========
-    let rawData = [], cleanRows = [], currentIdx = 0;
+// ===================== ابزار مشترک =====================
 
-    function openTab(name, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(name).style.display = 'block';
-        btn.classList.add('active');
+/**
+ * نرمال‌سازی قوی کلید برای مقایسه:
+ * - number → string مستقیم (بدون نماد علمی)
+ * - تبدیل اعداد فارسی/عربی
+ * - حذف فاصله‌های پنهان
+ * - حذف صفرهای ابتدایی در اعداد خالص
+ */
+function normalizeKey(val) {
+    if (val === null || val === undefined) return '';
+
+    if (typeof val === 'number') {
+        // جلوگیری از نماد علمی: 1.23e+11 → "123000000000"
+        if (!isFinite(val)) return '';
+        // اگر صحیح بود
+        if (Number.isInteger(val)) return String(val);
+        // اگر اعشاری بود، گرد کن (شناسه‌ها معمولاً صحیح هستند)
+        return String(Math.round(val));
     }
 
-    async function handleFile(input, mode) {
-        const file = input.files[0];
-        if (!file) return;
-        const data = await file.arrayBuffer();
-        const wb = XLSX.read(data);
-        rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
-        const headers = rawData[0];
+    let s = String(val);
 
-        if (mode === 'copy') {
-            const sel = document.getElementById('colSelectCopy');
-            sel.innerHTML = '<option value="">🎯 انتخاب ستون...</option>';
-            headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
-            document.getElementById('upArea1').style.display = 'none';
-            document.getElementById('copyControls').style.display = 'block';
-        } else {
-            const sel = document.getElementById('colSelectFixer');
-            sel.innerHTML = '<option value="">🎯 انتخاب ستون شماره تلفن...</option>';
-            headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
-            document.getElementById('upArea2').style.display = 'none';
-            document.getElementById('fixerControls').style.display = 'block';
-        }
+    // تبدیل اعداد فارسی ۰-۹
+    s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    // تبدیل اعداد عربی ٠-٩
+    s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+
+    // حذف فاصله‌های مختلف (space, ZWNJ, nbsp, ZWS, ...)
+    s = s.replace(/[\s\u200c\u00a0\u200b\u200d\ufeff\u202a-\u202e]+/g, ' ').trim();
+
+    // lowercase
+    s = s.toLowerCase();
+
+    // اگر خالصاً عددی بود، صفرهای ابتدایی حذف شود (012345 == 12345)
+    if (/^\d+$/.test(s)) {
+        s = String(parseInt(s, 10));
     }
 
-    document.getElementById('colSelectCopy').onchange = function() {
-        const col = this.value;
-        cleanRows = rawData.slice(1).map(r => r[col]).filter(c => c);
-        currentIdx = 0;
-        updateCopyUI();
-    };
+    return s;
+}
 
-    function updateCopyUI() {
-        const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
-        const end = Math.min(currentIdx + chunk, cleanRows.length);
-        document.getElementById('btnCopy').innerText = `📋 کپی ردیف ${currentIdx+1} تا ${end}`;
-        document.getElementById('bar1').style.width = (currentIdx / cleanRows.length * 100) + '%';
+function fixPhone(val) {
+    if (val === null || val === undefined) return null;
+    let n = String(val);
+    n = n.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    n = n.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+    n = n.replace(/\D/g, '');
+    if (!n) return null;
+    if (n.startsWith('0098')) n = '0' + n.substring(4);
+    else if (n.startsWith('98') && n.length >= 12) n = '0' + n.substring(2);
+    if (n.length === 10 && n.startsWith('9')) n = '0' + n;
+    if (n.length === 11 && n.startsWith('09')) return n;
+    return null;
+}
+
+// ===================== تب‌ها =====================
+let rawData = [], cleanRows = [], currentIdx = 0;
+
+function openTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(name).style.display = 'block';
+    btn.classList.add('active');
+}
+
+async function handleFile(input, mode) {
+    const file = input.files[0];
+    if (!file) return;
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data);
+    rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const headers = rawData[0];
+    if (mode === 'copy') {
+        const sel = document.getElementById('colSelectCopy');
+        sel.innerHTML = '<option value="">🎯 انتخاب ستون...</option>';
+        headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+        document.getElementById('upArea1').style.display = 'none';
+        document.getElementById('copyControls').style.display = 'block';
+    } else {
+        const sel = document.getElementById('colSelectFixer');
+        sel.innerHTML = '<option value="">🎯 انتخاب ستون شماره تلفن...</option>';
+        headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+        document.getElementById('upArea2').style.display = 'none';
+        document.getElementById('fixerControls').style.display = 'block';
     }
+}
 
-    document.getElementById('btnCopy').onclick = function() {
-        const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
-        const end = Math.min(currentIdx + chunk, cleanRows.length);
-        const text = cleanRows.slice(currentIdx, end).join('\n');
-        navigator.clipboard.writeText(text).then(() => {
-            this.innerText = "کپی شد! ✅";
-            this.classList.add('success');
-            setTimeout(() => {
-                this.classList.remove('success');
-                if (end < cleanRows.length) { currentIdx += chunk; updateCopyUI(); }
-                else this.innerText = "پایان فایل 🎉";
-            }, 1000);
-        });
-    };
+document.getElementById('colSelectCopy').onchange = function() {
+    const col = this.value;
+    cleanRows = rawData.slice(1).map(r => r[col]).filter(c => c !== undefined && c !== null && c !== '');
+    currentIdx = 0;
+    updateCopyUI();
+};
 
-    document.getElementById('btnFix').onclick = function() {
-        const colIdx = document.getElementById('colSelectFixer').value;
-        if (colIdx === '') return alert("لطفا ستون را انتخاب کنید");
-        this.innerText = "در حال پردازش... ⏳";
-        const processedData = rawData.slice(1).map(row => {
-            let phone = String(row[colIdx] || "");
-            let fixed = fixPhone(phone);
-            if (fixed) { let nr = [...row]; nr[colIdx] = fixed; return nr; }
-            return null;
-        }).filter(r => r !== null);
-        const newWb = XLSX.utils.book_new();
-        const newWs = XLSX.utils.aoa_to_sheet([rawData[0], ...processedData]);
-        XLSX.utils.book_append_sheet(newWb, newWs, "Fixed Numbers");
-        XLSX.writeFile(newWb, "Fixed_Phones.xlsx");
-        this.innerText = "فایل آماده شد! ✅";
-        setTimeout(() => this.innerText = "✨ اصلاح و دانلود فایل جدید", 3000);
-    };
+function updateCopyUI() {
+    const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
+    const end = Math.min(currentIdx + chunk, cleanRows.length);
+    document.getElementById('btnCopy').innerText = `📋 کپی ردیف ${currentIdx+1} تا ${end}`;
+    document.getElementById('bar1').style.width = (currentIdx / cleanRows.length * 100) + '%';
+}
 
-    function fixPhone(val) {
-        let n = String(val).replace(/\D/g, '');
-        n = n.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
-             .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-        if (n.startsWith('98')) n = '0' + n.substring(2);
-        if (n.startsWith('0098')) n = '0' + n.substring(4);
-        if (n.startsWith('+98')) n = '0' + n.substring(3);
-        if (n.length === 10 && n.startsWith('9')) n = '0' + n;
-        if (n.length === 11 && n.startsWith('09')) return n;
-        return null;
-    }
-
-    // ========== تب سوم: ادغام فایل‌ها ==========
-    let mergeData1 = null, mergeData2 = null;
-
-    async function handleMergeFile(input, fileNum) {
-        const file = input.files[0];
-        if (!file) return;
-        const data = await file.arrayBuffer();
-        const wb = XLSX.read(data);
-        const sheetData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
-
-        if (fileNum === 1) {
-            mergeData1 = sheetData;
-            const headers = sheetData[0] || [];
-            const sel = document.getElementById('mergeCol1');
-            sel.innerHTML = '<option value="">انتخاب ستون مشترک...</option>';
-            headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
-            document.getElementById('mergeUp1').classList.add('uploaded');
-            document.getElementById('mergeSt1').textContent = '✅ ' + file.name;
-            document.getElementById('mergeCtrl1').style.display = 'block';
-        } else {
-            mergeData2 = sheetData;
-            const headers = sheetData[0] || [];
-
-            const selKey = document.getElementById('mergeCol2Key');
-            selKey.innerHTML = '<option value="">انتخاب ستون مشترک...</option>';
-            headers.forEach((h, i) => selKey.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
-
-            const selPhone = document.getElementById('mergeCol2Phone');
-            selPhone.innerHTML = '<option value="">انتخاب ستون شماره تلفن...</option>';
-            headers.forEach((h, i) => selPhone.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
-
-            document.getElementById('mergeUp2').classList.add('uploaded');
-            document.getElementById('mergeSt2').textContent = '✅ ' + file.name;
-            document.getElementById('mergeCtrl2').style.display = 'block';
-        }
-
-        checkMergeReady();
-    }
-
-    function checkMergeReady() {
-        const btn = document.getElementById('btnMerge');
-        if (mergeData1 && mergeData2) {
-            btn.disabled = false;
-        }
-    }
-
-    function doMerge() {
-        const col1 = document.getElementById('mergeCol1').value;
-        const col2Key = document.getElementById('mergeCol2Key').value;
-        const col2Phone = document.getElementById('mergeCol2Phone').value;
-
-        if (col1 === '') return alert('لطفاً ستون مشترک در فایل اول را انتخاب کنید');
-        if (col2Key === '') return alert('لطفاً ستون مشترک در فایل دوم را انتخاب کنید');
-        if (col2Phone === '') return alert('لطفاً ستون شماره تلفن در فایل دوم را انتخاب کنید');
-
-        const btn = document.getElementById('btnMerge');
-        btn.innerText = '⏳ در حال پردازش...';
-        btn.disabled = true;
-
-        // ساختن Map از فایل دوم: key=شناسه → شماره تلفن اصلاح شده
-        const phoneMap = new Map();
-        const headers2 = mergeData2[0] || [];
-        for (let i = 1; i < mergeData2.length; i++) {
-            const row = mergeData2[i];
-            const keyVal = String(row[col2Key] || '').trim();
-            if (!keyVal) continue;
-            const rawPhone = String(row[col2Phone] || '').trim();
-            const fixedPhone = fixPhone(rawPhone);
-            if (fixedPhone) {
-                // اگر چند شماره برای یک شناسه وجود دارد، اولی را نگه می‌داریم
-                if (!phoneMap.has(keyVal)) {
-                    phoneMap.set(keyVal, fixedPhone);
-                }
-            }
-        }
-
-        // ساختن ردیف‌های خروجی از فایل اول که در phoneMap هستند
-        const headers1 = mergeData1[0] || [];
-        // ستون شماره تلفن (از فایل دوم) را هم اضافه می‌کنیم
-        const phoneColHeader = headers2[col2Phone] || 'شماره تلفن';
-        const outputHeaders = [...headers1, phoneColHeader];
-        const outputRows = [outputHeaders];
-
-        let matchCount = 0;
-        for (let i = 1; i < mergeData1.length; i++) {
-            const row = mergeData1[i];
-            const keyVal = String(row[col1] || '').trim();
-            if (!keyVal) continue;
-            if (phoneMap.has(keyVal)) {
-                outputRows.push([...row, phoneMap.get(keyVal)]);
-                matchCount++;
-            }
-        }
-
-        // دانلود فایل نهایی
-        const newWb = XLSX.utils.book_new();
-        const newWs = XLSX.utils.aoa_to_sheet(outputRows);
-        XLSX.utils.book_append_sheet(newWb, newWs, "Merged");
-        XLSX.writeFile(newWb, "Merged_Result.xlsx");
-
-        // نمایش نتیجه
-        const resultBox = document.getElementById('mergeResult');
-        resultBox.style.display = 'block';
-        resultBox.innerHTML = `
-            ✅ فایل نهایی آماده شد!<br>
-            🔢 تعداد ردیف‌های منطبق: <b>${matchCount}</b><br>
-            📱 شماره‌ها به فرمت ۰۹xxxxxxxx تبدیل شدند.
-        `;
-
-        btn.innerText = '✅ فایل دانلود شد!';
-        btn.classList.add('success');
+document.getElementById('btnCopy').onclick = function() {
+    const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
+    const end = Math.min(currentIdx + chunk, cleanRows.length);
+    const text = cleanRows.slice(currentIdx, end).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        this.innerText = "کپی شد! ✅"; this.classList.add('success');
         setTimeout(() => {
-            btn.innerText = '🔗 ادغام و دانلود فایل نهایی';
-            btn.classList.remove('success');
-            btn.disabled = false;
-        }, 3000);
-    }
+            this.classList.remove('success');
+            if (end < cleanRows.length) { currentIdx += chunk; updateCopyUI(); }
+            else this.innerText = "پایان فایل 🎉";
+        }, 1000);
+    });
+};
 
-    function resetMerge() {
-        mergeData1 = null;
-        mergeData2 = null;
-        ['mergeCtrl1','mergeCtrl2'].forEach(id => document.getElementById(id).style.display = 'none');
-        ['mergeUp1','mergeUp2'].forEach(id => {
-            const el = document.getElementById(id);
-            el.classList.remove('uploaded');
+document.getElementById('btnFix').onclick = function() {
+    const colIdx = document.getElementById('colSelectFixer').value;
+    if (colIdx === '') return alert("لطفا ستون را انتخاب کنید");
+    this.innerText = "در حال پردازش... ⏳";
+    const processedData = rawData.slice(1).map(row => {
+        let fixed = fixPhone(row[colIdx]);
+        if (fixed) { let nr = [...row]; nr[colIdx] = fixed; return nr; }
+        return null;
+    }).filter(r => r !== null);
+    const newWb = XLSX.utils.book_new();
+    const newWs = XLSX.utils.aoa_to_sheet([rawData[0], ...processedData]);
+    XLSX.utils.book_append_sheet(newWb, newWs, "Fixed Numbers");
+    XLSX.writeFile(newWb, "Fixed_Phones.xlsx");
+    this.innerText = "فایل آماده شد! ✅";
+    setTimeout(() => this.innerText = "✨ اصلاح و دانلود فایل جدید", 3000);
+};
+
+// ===================== تب سوم: ادغام =====================
+let mergeData1 = null, mergeData2 = null;
+
+async function handleMergeFile(input, fileNum) {
+    const file = input.files[0];
+    if (!file) return;
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data);
+    // raw:true: اعداد به صورت number خوانده می‌شوند (نه string)
+    const sheetData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+
+    if (fileNum === 1) {
+        mergeData1 = sheetData;
+        const h = sheetData[0] || [];
+        const sel = document.getElementById('mergeCol1');
+        sel.innerHTML = '<option value="">انتخاب ستون مشترک...</option>';
+        h.forEach((v,i) => sel.innerHTML += `<option value="${i}">${v||'ستون '+(i+1)}</option>`);
+        document.getElementById('mergeUp1').classList.add('uploaded');
+        document.getElementById('mergeSt1').textContent = '✅ ' + file.name;
+        document.getElementById('mergeCtrl1').style.display = 'block';
+    } else {
+        mergeData2 = sheetData;
+        const h = sheetData[0] || [];
+        ['mergeCol2Key','mergeCol2Phone'].forEach(id => {
+            const sel = document.getElementById(id);
+            sel.innerHTML = '<option value="">انتخاب...</option>';
+            h.forEach((v,i) => sel.innerHTML += `<option value="${i}">${v||'ستون '+(i+1)}</option>`);
         });
-        document.getElementById('mergeSt1').textContent = 'انتخاب فایل اول';
-        document.getElementById('mergeSt2').textContent = 'انتخاب فایل دوم';
-        document.getElementById('mergeResult').style.display = 'none';
-        document.getElementById('btnMerge').disabled = true;
+        document.getElementById('mergeUp2').classList.add('uploaded');
+        document.getElementById('mergeSt2').textContent = '✅ ' + file.name;
+        document.getElementById('mergeCtrl2').style.display = 'block';
     }
-</script>
+    checkMergeReady();
+}
 
+function checkMergeReady() {
+    const c1  = document.getElementById('mergeCol1').value;
+    const c2k = document.getElementById('mergeCol2Key').value;
+    const c2p = document.getElementById('mergeCol2Phone').value;
+    document.getElementById('btnMerge').disabled = !(mergeData1 && mergeData2 && c1!=='' && c2k!=='' && c2p!=='');
+}
+
+function doMerge() {
+    const col1    = parseInt(document.getElementById('mergeCol1').value);
+    const col2Key = parseInt(document.getElementById('mergeCol2Key').value);
+    const col2Pho = parseInt(document.getElementById('mergeCol2Phone').value);
+
+    const btn = document.getElementById('btnMerge');
+    btn.innerText = '⏳ در حال پردازش...';
+    btn.disabled = true;
+
+    // --- ساخت Map از فایل دوم ---
+    const phoneMap = new Map();
+    const headers2 = mergeData2[0] || [];
+    let skippedNoPhone = 0;
+
+    for (let i = 1; i < mergeData2.length; i++) {
+        const row = mergeData2[i];
+        const rawKey = row[col2Key];
+        if (rawKey === undefined || rawKey === null || rawKey === '') continue;
+        const nKey = normalizeKey(rawKey);
+        if (!nKey) continue;
+        const fixedPhone = fixPhone(row[col2Pho]);
+        if (fixedPhone) {
+            if (!phoneMap.has(nKey)) phoneMap.set(nKey, fixedPhone);
+        } else {
+            skippedNoPhone++;
+        }
+    }
+
+    // --- جستجو در فایل اول ---
+    const headers1 = mergeData1[0] || [];
+    const phoneColHeader = headers2[col2Pho] || 'شماره تلفن';
+    const outputRows = [[...headers1, phoneColHeader]];
+    let matchCount = 0, noMatchCount = 0;
+
+    for (let i = 1; i < mergeData1.length; i++) {
+        const row = mergeData1[i];
+        const rawKey = row[col1];
+        if (rawKey === undefined || rawKey === null || rawKey === '') continue;
+        const nKey = normalizeKey(rawKey);
+        if (phoneMap.has(nKey)) {
+            outputRows.push([...row, phoneMap.get(nKey)]);
+            matchCount++;
+        } else {
+            noMatchCount++;
+        }
+    }
+
+    // --- تهیه اطلاعات دیباگ ---
+    const sampleSize = 5;
+    const s1 = mergeData1.slice(1, sampleSize+1).map(r => {
+        const raw = r[col1];
+        const norm = normalizeKey(raw);
+        return `<span style="color:#e2e8f0">${JSON.stringify(raw)}</span> <span style="color:#64748b">[${typeof raw}]</span> → <span style="color:#818cf8">"${norm}"</span>`;
+    }).join('<br>');
+    const s2 = mergeData2.slice(1, sampleSize+1).map(r => {
+        const raw = r[col2Key];
+        const norm = normalizeKey(raw);
+        const phone = fixPhone(r[col2Pho]);
+        return `<span style="color:#e2e8f0">${JSON.stringify(raw)}</span> <span style="color:#64748b">[${typeof raw}]</span> → <span style="color:#818cf8">"${norm}"</span> | tel: <span style="color:#10b981">${phone||'❌'}</span>`;
+    }).join('<br>');
+
+    const debugBox = document.getElementById('debugBox');
+    debugBox.innerHTML = `
+        <span class="lbl">📁 فایل اول — نمونه کلیدها (raw → normalized):</span><br>${s1}
+        <br><br>
+        <span class="lbl">📁 فایل دوم — نمونه کلیدها + شماره:</span><br>${s2}
+        <br><br>
+        <span class="lbl">Map حاوی ${phoneMap.size} کلید منحصربه‌فرد با شماره معتبر</span>
+    `;
+    document.getElementById('debugToggleBtn').style.display = 'block';
+
+    // --- نتیجه ---
+    document.getElementById('mergeWarn').style.display = 'none';
+    document.getElementById('mergeResult').style.display = 'none';
+
+    if (matchCount === 0) {
+        const w = document.getElementById('mergeWarn');
+        w.style.display = 'block';
+        w.innerHTML = `⚠️ هیچ تطابقی پیدا نشد!<br>
+            Map فایل دوم: <b>${phoneMap.size}</b> کلید | فایل اول: <b>${mergeData1.length-1}</b> ردیف<br>
+            <small>برای دیدن مقادیر خام، دکمه دیباگ را بزنید.</small>`;
+        btn.innerText = '🔗 ادغام و دانلود فایل نهایی';
+        btn.disabled = false;
+        return;
+    }
+
+    const newWb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(newWb, XLSX.utils.aoa_to_sheet(outputRows), "Merged");
+    XLSX.writeFile(newWb, "Merged_Result.xlsx");
+
+    const r = document.getElementById('mergeResult');
+    r.style.display = 'block';
+    r.innerHTML = `
+        ✅ فایل نهایی آماده شد!<br>
+        🟢 ردیف‌های منطبق (با شماره): <b>${matchCount}</b><br>
+        🔴 ردیف‌های بدون تطابق در فایل اول: <b>${noMatchCount}</b><br>
+        ⚪ ردیف‌های فایل دوم بدون شماره معتبر: <b>${skippedNoPhone}</b>
+    `;
+    btn.innerText = '✅ فایل دانلود شد!';
+    btn.classList.add('success');
+    setTimeout(() => {
+        btn.innerText = '🔗 ادغام و دانلود فایل نهایی';
+        btn.classList.remove('success');
+        btn.disabled = false;
+    }, 3000);
+}
+
+function toggleDebug() {
+    const box = document.getElementById('debugBox');
+    const btn = document.getElementById('debugToggleBtn');
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+        btn.textContent = '🔍 مخفی کردن دیباگ';
+    } else {
+        box.style.display = 'none';
+        btn.textContent = '🔍 نمایش اطلاعات دیباگ';
+    }
+}
+
+function resetMerge() {
+    mergeData1 = null; mergeData2 = null;
+    ['mergeCtrl1','mergeCtrl2'].forEach(id => document.getElementById(id).style.display = 'none');
+    ['mergeUp1','mergeUp2'].forEach(id => document.getElementById(id).classList.remove('uploaded'));
+    document.getElementById('mergeSt1').textContent = 'انتخاب فایل اول';
+    document.getElementById('mergeSt2').textContent = 'انتخاب فایل دوم';
+    ['mergeResult','mergeWarn','debugBox'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('debugToggleBtn').style.display = 'none';
+    document.getElementById('btnMerge').disabled = true;
+}
+</script>
 </body>
 </html>
