@@ -325,6 +325,34 @@
 
 <script>
 // ===== ابزار مشترک =====
+// تابع قوی برای خواندن فایل‌های اکسل از جمله فایل‌های خراب یا غیراستاندارد
+async function readExcelFile(file) {
+    const arrayBuf = await file.arrayBuffer();
+    const attempts = [
+        () => XLSX.read(arrayBuf, {header:1, raw:true}),
+        () => XLSX.read(arrayBuf, {header:1, raw:true, cellNF:false, cellHTML:false}),
+        () => XLSX.read(arrayBuf, {header:1, raw:true, WTF:false, cellStyles:false, cellDates:false}),
+        () => XLSX.read(arrayBuf, {header:1, raw:false}),
+    ];
+    for (const attempt of attempts) {
+        try {
+            const wb = attempt();
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            if (!sheet) continue;
+            const data = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:''});
+            if (data && data.length > 0) return data;
+        } catch(e) { continue; }
+    }
+    // آخرین تلاش: خواندن به صورت متن (CSV)
+    try {
+        const text = await file.text();
+        const wb = XLSX.read(text, {type:'string'});
+        const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''});
+        if (data && data.length > 0) return data;
+    } catch(e) {}
+    return null;
+}
+
 function normalizeKey(val) {
     if (val === null || val === undefined) return '';
     if (typeof val === 'number') {
@@ -366,8 +394,9 @@ function openTab(name, btn) {
 
 async function handleFile(input, mode) {
     const file = input.files[0]; if (!file) return;
-    const wb = XLSX.read(await file.arrayBuffer());
-    rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست. لطفاً فایل را ذخیره مجدد کنید.'); return; }
+    rawData = data;
     const headers = rawData[0];
     if (mode === 'copy') {
         const sel = document.getElementById('colSelectCopy');
@@ -452,8 +481,8 @@ function onColChange(sel, previewId, fileKey) {
 
 async function handleMergeFile(input, fileNum) {
     const file = input.files[0]; if (!file) return;
-    const wb = XLSX.read(await file.arrayBuffer());
-    const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
 
     if (fileNum === 1) {
         mergeData1 = data;
@@ -670,8 +699,9 @@ let splitRawData = null;
 
 async function handleSplitFile(input) {
     const file = input.files[0]; if (!file) return;
-    const wb = XLSX.read(await file.arrayBuffer());
-    splitRawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+    splitRawData = data;
     const headers = splitRawData[0] || [];
     const sel = document.getElementById('splitPhoneCol');
     sel.innerHTML = '<option value="">انتخاب ستون شماره تلفن...</option>';
@@ -762,8 +792,8 @@ async function handleCombineFiles(input) {
     for (const file of files) {
         // جلوگیری از اضافه شدن دوباره همان فایل
         if (combineFiles.find(f => f.name === file.name)) continue;
-        const wb = XLSX.read(await file.arrayBuffer());
-        const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+        const data = await readExcelFile(file);
+        if (!data) { console.warn('skip unreadable:', file.name); continue; }
         const headers = data[0] || [];
         const rows = data.slice(1);
         combineFiles.push({ name: file.name, headers, rows });
@@ -927,13 +957,49 @@ async function handleNidFile(input) {
     // بارگذاری دیتابیس
     loadNidDB();
 
-    const wb = XLSX.read(await file.arrayBuffer());
-    nidRawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    let nidRawDataTemp = null;
+    const arrayBuf = await file.arrayBuffer();
+
+    // تلاش با تنظیمات مختلف برای فایل‌های خراب یا غیراستاندارد
+    const readOptions = [
+        {header:1, raw:true},
+        {header:1, raw:true, type:'array'},
+        {header:1, raw:false},
+        {header:1, raw:true, cellNF:false, cellHTML:false},
+        {header:1, raw:true, WTF:false, cellStyles:false},
+    ];
+
+    for (const opts of readOptions) {
+        try {
+            const wb = XLSX.read(arrayBuf, opts);
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            if (!sheet) continue;
+            nidRawDataTemp = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:''});
+            if (nidRawDataTemp && nidRawDataTemp.length > 0) break;
+        } catch(e) {
+            continue;
+        }
+    }
+
+    // اگر همه تلاش‌ها شکست خورد، فایل CSV امتحان کن
+    if (!nidRawDataTemp || nidRawDataTemp.length === 0) {
+        try {
+            const text = await file.text();
+            const wb = XLSX.read(text, {type:'string', raw:true});
+            nidRawDataTemp = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''});
+        } catch(e) {}
+    }
+
+    if (!nidRawDataTemp || nidRawDataTemp.length === 0) {
+        alert('⚠️ فایل قابل خواندن نیست. لطفاً فایل را در اکسل باز کنید، Save As کنید و دوباره امتحان کنید.');
+        return;
+    }
+
+    nidRawData = nidRawDataTemp;
     const headers = nidRawData[0] || [];
     const sel = document.getElementById('nidCol');
     sel.innerHTML = '<option value="">انتخاب ستون کدملی...</option>';
     headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
-    // مخفی کردن آپلود و نمایش کنترل‌ها
     document.getElementById('nidUpArea').style.display = 'none';
     document.getElementById('nidSt').textContent = '✅ ' + file.name;
     document.getElementById('nidControls').style.display = 'block';
