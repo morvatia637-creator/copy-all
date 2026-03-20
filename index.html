@@ -933,7 +933,8 @@ async function handleNidFile(input) {
     const sel = document.getElementById('nidCol');
     sel.innerHTML = '<option value="">انتخاب ستون کدملی...</option>';
     headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
-    document.getElementById('nidUpArea').classList.add('uploaded');
+    // مخفی کردن آپلود و نمایش کنترل‌ها
+    document.getElementById('nidUpArea').style.display = 'none';
     document.getElementById('nidSt').textContent = '✅ ' + file.name;
     document.getElementById('nidControls').style.display = 'block';
 }
@@ -1026,6 +1027,7 @@ async function doNidSplit() {
 function resetNid() {
     nidRawData = null;
     document.getElementById('nidUpArea').classList.remove('uploaded');
+    document.getElementById('nidUpArea').style.display = 'block';
     document.getElementById('nidSt').textContent = 'انتخاب فایل اکسل';
     document.getElementById('nidControls').style.display = 'none';
     document.getElementById('nidCol').innerHTML = '';
@@ -1034,18 +1036,36 @@ function resetNid() {
     document.getElementById('btnNid').disabled = true;
 }
 
-// ===== رمز عبور =====
-// برای تغییر رمز، مقدار زیر را عوض کنید:
-const APP_PASSWORD = 'excel1404';
+// ===== رمز عبور — از config.json خوانده می‌شود =====
+let APP_PASSWORD = null;
+
+async function loadConfig() {
+    // اگر session قبلاً unlock شده، نیازی به fetch نیست
+    if (sessionStorage.getItem('unlocked') === '1') {
+        document.getElementById('lockScreen').style.display = 'none';
+        return;
+    }
+    try {
+        const res = await fetch('config.json?v=' + Date.now());
+        const cfg = await res.json();
+        APP_PASSWORD = cfg.password;
+    } catch(e) {
+        // اگر config.json پیدا نشد، رمز پیش‌فرض
+        APP_PASSWORD = 'excel1404';
+    }
+}
 
 function checkPassword() {
     const input = document.getElementById('pwdInput');
     const error = document.getElementById('lockError');
-    const val = input.value;
 
-    if (val === APP_PASSWORD) {
+    if (!APP_PASSWORD) {
+        error.textContent = '⏳ در حال بارگذاری...';
+        return;
+    }
+
+    if (input.value === APP_PASSWORD) {
         document.getElementById('lockScreen').style.display = 'none';
-        // ذخیره در session تا بعد از رفرش دوباره نپرسه
         sessionStorage.setItem('unlocked', '1');
     } else {
         error.textContent = '❌ رمز اشتباه است';
@@ -1055,10 +1075,8 @@ function checkPassword() {
     }
 }
 
-// اگر قبلاً در این session باز شده، مستقیم نشون بده
-if (sessionStorage.getItem('unlocked') === '1') {
-    document.getElementById('lockScreen').style.display = 'none';
-}
+// اجرا هنگام لود صفحه
+loadConfig();
 
 </script>
 </body>
