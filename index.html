@@ -6,6 +6,7 @@
     <title>Excel Pro Suite | ابزار پیشرفته اکسل</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
             --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc;
@@ -114,6 +115,7 @@
         <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
         <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام فایل‌ها</button>
         <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب فایل‌ها</button>
+        <button class="tab-btn" onclick="openTab('splitTab',this)">🗺️ تفکیک استانی</button>
     </div>
 
     <!-- تب اول -->
@@ -215,8 +217,28 @@
             <button onclick="resetCombine()" class="reset-btn">❌ شروع مجدد</button>
         </div>
     </div>
-</div>
-<footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
+    <!-- تب پنجم: تفکیک استانی -->
+    <div id="splitTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • فایل اکسل را آپلود کنید.<br>
+            • ستون شماره تلفن را انتخاب کنید.<br>
+            • یک فایل <b>ZIP</b> دریافت می‌کنید که هر استان فایل جداگانه دارد.<br>
+            • شماره‌های ناشناس در فایل <b>نامشخص</b> ذخیره می‌شوند.
+        </div>
+        <div class="upload-section" id="splitUpArea">
+            <span style="font-size:30px;">🗺️</span><br>
+            <span id="splitSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleSplitFile(this)">
+        </div>
+        <div id="splitControls" style="display:none;">
+            <p class="section-label">ستون شماره تلفن:</p>
+            <select id="splitPhoneCol" onchange="checkSplitReady()"></select>
+            <button id="btnSplit" class="main-btn" onclick="doSplit()" disabled>🗺️ تفکیک و دانلود ZIP</button>
+            <div class="result-box" id="splitResult"></div>
+            <button onclick="resetSplit()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+</div>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
 
 <script>
 // ===== ابزار مشترک =====
@@ -449,6 +471,155 @@ function doMerge() {
 
     btn.innerText='✅ فایل دانلود شد!'; btn.classList.add('success');
     setTimeout(()=>{ btn.innerText='🔗 ادغام و دانلود فایل نهایی'; btn.classList.remove('success'); btn.disabled=false; },3000);
+}
+
+// ===== تب پنجم: تفکیک استانی =====
+
+// پیش‌شماره موبایل → استان
+// منبع: اپراتورهای ایران (همراه اول، ایرانسل، رایتل، شاتل موبایل، اپتل و...)
+const PROVINCE_PREFIXES = {
+    // ————— همراه اول —————
+    '0910': 'تهران', '0911': 'مازندران', '0912': 'تهران',
+    '0913': 'اصفهان', '0914': 'آذربایجان شرقی', '0915': 'خراسان رضوی',
+    '0916': 'خوزستان', '0917': 'فارس', '0918': 'کرمانشاه',
+    '0919': 'تهران', '0990': 'تهران', '0991': 'تهران',
+    '0992': 'تهران', '0993': 'تهران', '0994': 'تهران',
+    '0995': 'تهران', '0996': 'تهران',
+    // ————— ایرانسل —————
+    '0930': 'ایرانسل', '0933': 'ایرانسل', '0935': 'ایرانسل',
+    '0936': 'ایرانسل', '0937': 'ایرانسل', '0938': 'ایرانسل',
+    '0939': 'ایرانسل', '0941': 'ایرانسل', '0900': 'ایرانسل',
+    '0901': 'ایرانسل', '0902': 'ایرانسل', '0903': 'ایرانسل',
+    '0930': 'ایرانسل', '0933': 'ایرانسل',
+    // ————— رایتل —————
+    '0920': 'رایتل', '0921': 'رایتل', '0922': 'رایتل', '0923': 'رایتل',
+    // ————— شاتل موبایل —————
+    '0931': 'شاتل موبایل',
+    // ————— ایران‌تل (تالیا) —————
+    '0932': 'ایران‌تل',
+    // ————— اپتل —————
+    '0934': 'اپتل',
+    // ————— همراه اول (سری ۹۸x) —————
+    '0980': 'تهران', '0981': 'تهران', '0982': 'تهران',
+};
+
+// پیش‌شماره ثابت استانی (4 رقم اول بعد از 0)
+const LANDLINE_PREFIXES = {
+    '021': 'تهران', '026': 'البرز', '025': 'قم', '023': 'سمنان',
+    '024': 'زنجان', '028': 'قزوین', '034': 'کرمان', '035': 'یزد',
+    '031': 'اصفهان', '036': 'کرمان', '038': 'چهارمحال و بختیاری',
+    '032': 'اصفهان',
+    '041': 'آذربایجان شرقی', '044': 'آذربایجان غربی', '045': 'اردبیل',
+    '051': 'خراسان رضوی', '056': 'خراسان جنوبی', '058': 'خراسان شمالی',
+    '061': 'خوزستان', '065': 'کهگیلویه و بویراحمد',
+    '071': 'فارس', '074': 'فارس',
+    '076': 'هرمزگان', '077': 'هرمزگان',
+    '081': 'همدان', '083': 'کرمانشاه', '084': 'ایلام', '086': 'مرکزی',
+    '087': 'کردستان',
+    '011': 'مازندران', '013': 'گیلان', '017': 'گلستان',
+    '023': 'سمنان',
+    '054': 'سیستان و بلوچستان',
+    '066': 'لرستان',
+    '071': 'فارس',
+};
+
+// تابع تشخیص استان از شماره نرمال‌شده (09xxxxxxxxx)
+function detectProvince(phone) {
+    if (!phone || phone.length !== 11) return 'نامشخص';
+    const prefix4 = phone.substring(0, 4); // مثلاً 0912
+    if (PROVINCE_PREFIXES[prefix4]) return PROVINCE_PREFIXES[prefix4];
+    // اگر موبایل شناخته‌شده نبود ولی با 09 شروع شد
+    if (phone.startsWith('09')) return 'سایر موبایل';
+    // ثابت: 3 رقم اول
+    const prefix3 = phone.substring(0, 3);
+    if (LANDLINE_PREFIXES[prefix3]) return LANDLINE_PREFIXES[prefix3] + ' (ثابت)';
+    return 'نامشخص';
+}
+
+let splitRawData = null;
+
+async function handleSplitFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const wb = XLSX.read(await file.arrayBuffer());
+    splitRawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+    const headers = splitRawData[0] || [];
+    const sel = document.getElementById('splitPhoneCol');
+    sel.innerHTML = '<option value="">انتخاب ستون شماره تلفن...</option>';
+    headers.forEach((h,i) => sel.innerHTML += `<option value="${i}">${h||'ستون '+(i+1)}</option>`);
+    document.getElementById('splitUpArea').classList.add('uploaded');
+    document.getElementById('splitSt').textContent = '✅ ' + file.name;
+    document.getElementById('splitControls').style.display = 'block';
+}
+
+function checkSplitReady() {
+    const v = document.getElementById('splitPhoneCol').value;
+    document.getElementById('btnSplit').disabled = (v === '');
+}
+
+async function doSplit() {
+    const colIdx = parseInt(document.getElementById('splitPhoneCol').value);
+    const btn = document.getElementById('btnSplit');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const headers = splitRawData[0] || [];
+    // گروه‌بندی ردیف‌ها بر اساس استان
+    const groups = {}; // provinceName → [rows]
+
+    for (let i = 1; i < splitRawData.length; i++) {
+        const row = splitRawData[i];
+        const hasData = row.some(c => c !== null && c !== undefined && String(c).trim() !== '');
+        if (!hasData) continue; // ردیف خالی
+
+        const fixed = fixPhone(row[colIdx]);
+        const province = fixed ? detectProvince(fixed) : 'نامشخص';
+
+        if (!groups[province]) groups[province] = [];
+        // اگر شماره اصلاح شد، در خروجی شماره اصلاح‌شده بگذار
+        const outRow = [...row];
+        if (fixed) outRow[colIdx] = fixed;
+        groups[province].push(outRow);
+    }
+
+    // ساخت ZIP
+    const zip = new JSZip();
+    const provinceNames = Object.keys(groups).sort();
+
+    for (const province of provinceNames) {
+        const rows = groups[province];
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, province.substring(0, 31));
+        // XLSX به Uint8Array
+        const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+        zip.file(`${province}.xlsx`, wbout);
+    }
+
+    const zipBlob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'تفکیک_استانی.zip'; a.click();
+    URL.revokeObjectURL(url);
+
+    const totalRows = Object.values(groups).reduce((s,r)=>s+r.length, 0);
+    const r = document.getElementById('splitResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل ZIP آماده شد!<br>
+        🗺️ تعداد استان/اپراتور: <b>${provinceNames.length}</b><br>
+        🟢 مجموع ردیف‌های پردازش‌شده: <b>${totalRows}</b><br>
+        <span style="font-size:11px;color:#94a3b8;">${provinceNames.join(' | ')}</span>`;
+
+    btn.innerText = '✅ ZIP دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText='🗺️ تفکیک و دانلود ZIP'; btn.classList.remove('success'); btn.disabled=false; }, 3000);
+}
+
+function resetSplit() {
+    splitRawData = null;
+    document.getElementById('splitUpArea').classList.remove('uploaded');
+    document.getElementById('splitSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('splitControls').style.display = 'none';
+    document.getElementById('splitResult').style.display = 'none';
+    document.getElementById('splitPhoneCol').innerHTML = '';
+    document.getElementById('btnSplit').disabled = true;
 }
 
 // ===== تب چهارم: ترکیب فایل‌ها =====
