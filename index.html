@@ -1176,38 +1176,42 @@ function isTouchDevice() {
     return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 }
 
-// کپی سلول با کلیک
-let pvLastTapped = null; // برای موبایل: tap اول پاپ‌آپ، tap دوم کپی
+let pvLastTapped = null;
 
 function pvCopyCell(td, val, colName) {
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    const isTouch = isTouchDevice();
-    const isTruncated = td.scrollWidth > td.clientWidth || decoded.length > 25;
 
-    if (isTouch && isTruncated) {
-        // موبایل + سلول بریده‌شده: tap اول پاپ‌آپ، tap دوم کپی
+    if (isTouchDevice()) {
+        // موبایل: همیشه اول پاپ‌آپ، دوم کپی
         if (pvLastTapped === td) {
+            // tap دوم → کپی
+            pvLastTapped = null;
+            pvHidePopupNow();
             navigator.clipboard.writeText(decoded).then(() => {
                 td.classList.add('copied');
                 setTimeout(() => td.classList.remove('copied'), 800);
-                pvHidePopup();
                 const toast = document.getElementById('pvToast');
                 toast.textContent = '✅ کپی شد!';
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 1500);
-                pvLastTapped = null;
+            }).catch(() => {
+                // fallback برای مرورگرهایی که clipboard ندارن
+                const toast = document.getElementById('pvToast');
+                toast.textContent = decoded.substring(0,30) + (decoded.length>30?'...':'');
+                toast.style.opacity = '1';
+                setTimeout(() => toast.style.opacity = '0', 2000);
             });
         } else {
+            // tap اول → پاپ‌آپ
             pvLastTapped = td;
             pvShowPopupFromTd(td, decoded, colName);
-            setTimeout(() => { if (pvLastTapped === td) { pvLastTapped = null; pvHidePopup(); } }, 4000);
         }
     } else {
-        // دسکتاپ یا سلول کوتاه → مستقیم کپی
+        // دسکتاپ → مستقیم کپی
         navigator.clipboard.writeText(decoded).then(() => {
             td.classList.add('copied');
             setTimeout(() => td.classList.remove('copied'), 800);
-            pvHidePopup();
+            pvHidePopupNow();
             const toast = document.getElementById('pvToast');
             toast.textContent = '✅ کپی شد!';
             toast.style.opacity = '1';
@@ -1222,26 +1226,35 @@ function pvShowPopupFromTd(td, decoded, colName) {
     document.getElementById('pvPopupLabel').textContent = decodedCol;
     document.getElementById('pvPopupVal').textContent = decoded;
     document.getElementById('pvPopup').querySelector('.pp-copy-hint').textContent = '👆 دوباره بزنید تا کپی شود';
-    const rect = td.getBoundingClientRect();
-    let top = rect.bottom + 8;
-    let left = rect.left;
     popup.style.display = 'block';
-    const pw = popup.offsetWidth;
-    if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
-    if (left < 8) left = 8;
-    if (top + popup.offsetHeight > window.innerHeight - 10) top = rect.top - popup.offsetHeight - 8;
-    popup.style.top = top + 'px';
-    popup.style.left = left + 'px';
+    // موقعیت‌دهی
+    const rect = td.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 8;
+    let left = rect.left + window.scrollX;
+    // اطمینان از اینکه پاپ‌آپ رندر شده
+    requestAnimationFrame(() => {
+        const pw = popup.offsetWidth;
+        const ph = popup.offsetHeight;
+        if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+        if (left < 8) left = 8;
+        const topInViewport = rect.bottom + 8;
+        if (topInViewport + ph > window.innerHeight - 10) {
+            top = rect.top + window.scrollY - ph - 8;
+        }
+        popup.style.top = top + 'px';
+        popup.style.left = left + 'px';
+    });
+    popup.onclick = (e) => { e.stopPropagation(); };
 }
 
-// پاپ‌آپ محتوای کامل (hover دسکتاپ)
+// پاپ‌آپ hover دسکتاپ
 let pvPopupTimer = null;
 function pvShowPopup(e, val, colName) {
-    if (isTouchDevice()) return; // موبایل از tap استفاده می‌کنه
+    if (isTouchDevice()) return;
     clearTimeout(pvPopupTimer);
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
     const td = e.currentTarget;
-    const isTruncated = td.scrollWidth > td.clientWidth || decoded.length > 25;
+    const isTruncated = td.scrollWidth > td.clientWidth || decoded.length > 20;
     if (!isTruncated) return;
     const popup = document.getElementById('pvPopup');
     const decodedCol = colName.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
@@ -1258,17 +1271,41 @@ function pvShowPopup(e, val, colName) {
     if (top + popup.offsetHeight > window.innerHeight - 10) top = rect.top - popup.offsetHeight - 8;
     popup.style.top = top + 'px';
     popup.style.left = left + 'px';
-    popup.onclick = () => { navigator.clipboard.writeText(decoded).then(() => { pvHidePopup(); const t=document.getElementById('pvToast'); t.textContent='✅ کپی شد!'; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',1500); }); };
+    popup.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(decoded).then(() => {
+            pvHidePopupNow();
+            const t = document.getElementById('pvToast');
+            t.textContent = '✅ کپی شد!';
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 1500);
+        });
+    };
 }
+
 function pvHidePopup() {
-    pvPopupTimer = setTimeout(() => { document.getElementById('pvPopup').style.display = 'none'; }, 150);
+    pvPopupTimer = setTimeout(() => pvHidePopupNow(), 200);
 }
+function pvHidePopupNow() {
+    clearTimeout(pvPopupTimer);
+    document.getElementById('pvPopup').style.display = 'none';
+}
+
+// بستن پاپ‌آپ با کلیک بیرون — فقط دسکتاپ
 document.addEventListener('click', e => {
+    if (isTouchDevice()) return; // موبایل خودش مدیریت می‌کنه
     if (!e.target.closest('#pvPopup') && !e.target.closest('#pvTable td')) {
-        pvHidePopup();
-        pvLastTapped = null;
+        pvHidePopupNow();
     }
 });
+
+// بستن پاپ‌آپ موبایل با tap بیرون از جدول
+document.addEventListener('touchstart', e => {
+    if (!e.target.closest('#pvPopup') && !e.target.closest('#pvTable td')) {
+        pvHidePopupNow();
+        pvLastTapped = null;
+    }
+}, {passive: true});
 
 function pvSort(colIdx){
     if(pvSortCol===colIdx) pvSortDir*=-1;
