@@ -3,43 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro v10</title>
+    <title>Excel Master v11</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #6366f1; --success: #10b981; --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }
+        :root { --primary: #6366f1; --success: #10b981; --danger: #f43f5e; --bg: #0f172a; }
         * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .upload-card { border: 2px dashed #334155; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; position: relative; }
-        .upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-        select { width: 100%; padding: 12px; background: #0f172a; color: white; border-radius: 10px; border: 1px solid #334155; margin-bottom: 10px; font-size: 13px; }
-        .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .log { background: #000; color: #0f0; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 10px; margin-top: 15px; text-align: left; direction: ltr; min-height: 50px; }
-        h2 { text-align: center; font-size: 20px; color: var(--primary); }
+        body { background: var(--bg); color: #fff; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .card { width: 100%; max-width: 500px; background: #1e293b; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px #000; border: 1px solid #334155; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #0f172a; padding: 5px; border-radius: 12px; }
+        .tab { flex: 1; padding: 10px; border: none; background: none; color: #94a3b8; cursor: pointer; border-radius: 8px; font-size: 13px; }
+        .tab.active { background: var(--primary); color: #fff; }
+        .upload { border: 2px dashed #334155; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 15px; position: relative; }
+        .upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        select { width: 100%; padding: 12px; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 10px; margin-bottom: 10px; outline: none; }
+        .btn { background: var(--primary); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .log { background: #000; color: #0f0; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 10px; margin-top: 15px; text-align: left; direction: ltr; min-height: 80px; overflow-y: auto; max-height: 200px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>ادغام اکسل (Vlookup ساده)</h2>
+<div class="card">
+    <h2 style="text-align:center; font-size:20px; color:var(--primary)">Excel Multi-Tool v11</h2>
     
-    <div class="upload-card">📁 فایل اول (پایه)<input type="file" id="fA"></div>
-    <select id="sA" style="display:none"></select>
+    <div class="tabs">
+        <button class="tab active" id="t1" onclick="sh('c')">🚀 کپی ۷۰۰۰ تایی</button>
+        <button class="tab" id="t2" onclick="sh('m')">🔗 ادغام (Vlookup)</button>
+    </div>
 
-    <div class="upload-card">📁 فایل دوم (مرجع)<input type="file" id="fB"></div>
-    <select id="sB" style="display:none"></select>
-    <span style="font-size:11px">ستون شماره تلفن در فایل دوم:</span>
-    <select id="sP" style="display:none"></select>
+    <!-- بخش کپی -->
+    <div id="cBox">
+        <div class="upload">📁 انتخاب فایل اصلی<input type="file" id="fC"></div>
+        <select id="sC" style="display:none"></select>
+        <button id="btnC" class="btn" style="display:none">کپی ۷۰۰۰ ردیف</button>
+    </div>
 
-    <button id="go" class="btn" style="display:none">🧬 شروع ادغام</button>
-    <div id="log" class="log">منتظر فایل‌ها...</div>
+    <!-- بخش ادغام -->
+    <div id="mBox" style="display:none">
+        <div class="upload" id="uA">📁 فایل اول (پایه)<input type="file" id="fA"></div>
+        <select id="sA" style="display:none"></select>
+        <div class="upload" id="uB">📁 فایل دوم (مرجع)<input type="file" id="fB"></div>
+        <select id="sB" style="display:none"></select>
+        <p style="font-size:11px; color:var(--primary)">ستون شماره تلفن در فایل دوم:</p>
+        <select id="sP" style="display:none"></select>
+        <button id="btnM" class="btn" style="display:none">🧬 شروع ادغام هوشمند</button>
+    </div>
+
+    <div id="log" class="log">آماده برای کار...</div>
 </div>
 
 <script>
-    let dA = null, dB = null;
+    let dA, dB, dC;
 
-    // استانداردسازی شماره موبایل (فقط 09...)
+    function sh(t) {
+        document.getElementById('cBox').style.display = t=='c'?'block':'none';
+        document.getElementById('mBox').style.display = t=='m'?'block':'none';
+        document.getElementById('t1').className = t=='c'?'tab active':'tab';
+        document.getElementById('t2').className = t=='m'?'tab active':'tab';
+    }
+
+    // استانداردسازی شماره: فقط اعداد، ۱۰ رقم آخر + یک صفر اولش
     function fixPhone(v) {
         if (!v) return null;
         let s = String(v).replace(/\D/g, '');
@@ -47,81 +70,99 @@
         return '0' + s.slice(-10);
     }
 
-    // خواندن فایل
-    async function read(e, type) {
+    // استانداردسازی کلید: فقط اعداد را نگه دار (حذف تمام فاصله‌ها و ممیزها)
+    function fixKey(v) {
+        if (!v) return "";
+        return String(v).replace(/\D/g, ''); // فقط و فقط اعداد را نگه می‌دارد
+    }
+
+    async function load(e, target) {
         const f = e.target.files[0];
-        const wb = XLSX.read(await f.arrayBuffer());
-        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
-        if (type === 'A') {
-            dA = json; fill(json[0], 'sA');
+        const data = await f.arrayBuffer();
+        const wb = XLSX.read(data);
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+        
+        if (target == 'C') {
+            dC = json; fill(json[0], 'sC'); document.getElementById('btnC').style.display='block';
+        } else if (target == 'A') {
+            dA = json; fill(json[0], 'sA'); document.getElementById('uA').style.background='#1e3a8a';
         } else {
-            dB = json; fill(json[0], 'sB'); fill(json[0], 'sP');
+            dB = json; fill(json[0], 'sB'); fill(json[0], 'sP'); document.getElementById('uB').style.background='#1e3a8a';
         }
-        if (dA && dB) document.getElementById('go').style.display = 'block';
-        document.getElementById('log').innerText = `فایل ${type === 'A' ? 'اول' : 'دوم'} بارگذاری شد.`;
+        if (dA && dB) document.getElementById('btnM').style.display='block';
+        document.getElementById('log').innerText = `فایل ${f.name} لود شد.`;
     }
 
     function fill(h, id) {
-        const s = document.getElementById(id);
-        s.style.display = 'block';
+        const s = document.getElementById(id); s.style.display='block';
         s.innerHTML = '<option value="">انتخاب ستون...</option>';
         h.forEach((n, i) => s.innerHTML += `<option value="${i}">${n || i}</option>`);
     }
 
-    document.getElementById('fA').onchange = (e) => read(e, 'A');
-    document.getElementById('fB').onchange = (e) => read(e, 'B');
+    document.getElementById('fC').onchange = (e) => load(e, 'C');
+    document.getElementById('fA').onchange = (e) => load(e, 'A');
+    document.getElementById('fB').onchange = (e) => load(e, 'B');
 
-    document.getElementById('go').onclick = () => {
+    // عملیات کپی
+    document.getElementById('btnC').onclick = () => {
+        const i = document.getElementById('sC').value;
+        const res = dC.slice(1).map(r => r[i]).filter(c => c).slice(0, 7000).join('\n');
+        navigator.clipboard.writeText(res).then(() => alert("۷۰۰۰ تای اول کپی شد."));
+    };
+
+    // عملیات ادغام
+    document.getElementById('btnM').onclick = () => {
         const kA = document.getElementById('sA').value, kB = document.getElementById('sB').value, pB = document.getElementById('sP').value;
-        if (!kA || !kB || !pB) return alert("همه ستون‌ها را انتخاب کنید");
-
         const log = document.getElementById('log');
-        log.innerText = "در حال پردازش...";
+        log.innerText = "شروع ادغام...";
 
         setTimeout(() => {
             const mapB = new Map();
             const hB = dB[0];
-            
-            // ستون‌های حذفی: ستون جستجو و ستونی که نامش "ردیف" است
-            const keepB = hB.map((h, i) => (i != kB && String(h).trim() !== "ردیف") ? i : -1).filter(i => i !== -1);
+            // ستون‌های حذفی از فایل دوم (ستون کلید و ستونی با نام ردیف)
+            const keepB = hB.map((n, i) => (i != kB && String(n).trim() !== "ردیف") ? i : -1).filter(i => i !== -1);
 
-            // ۱. ساختن لیست جستجو از فایل دوم (فقط ردیف‌هایی که شماره معتبر دارند)
+            // ۱. پردازش فایل دوم (مرجع)
             dB.slice(1).forEach(row => {
                 const phone = fixPhone(row[pB]);
-                const key = String(row[kB] || "").trim(); // جستجوی خام متنی
+                const key = fixKey(row[kB]);
                 if (key && phone) {
                     const cleanRow = [...row];
-                    cleanRow[pB] = phone; // جایگزینی شماره استاندارد
+                    cleanRow[pB] = phone; // شماره استاندارد شده
                     mapB.set(key, cleanRow);
                 }
             });
 
-            // ۲. پیدا کردن در فایل اول و ادغام
+            log.innerHTML += `<br>موارد معتبر در فایل مرجع: ${mapB.size}`;
+
+            // ۲. ادغام با فایل اول
             const hA = dA[0];
-            const finalH = [...hA, ...keepB.map(i => hB[i])];
-            const result = [finalH];
-            let found = 0;
+            const finalResult = [[...hA, ...keepB.map(i => hB[i])]];
+            let matches = 0;
 
             dA.slice(1).forEach(rowA => {
-                const keyA = String(rowA[kA] || "").trim();
-                const match = mapB.get(keyA);
-                if (match) {
-                    const rowBase = Array.from({length: hA.length}, (_, i) => rowA[i] || "");
-                    const rowExtra = keepB.map(i => match[i]);
-                    result.push([...rowBase, ...rowExtra]);
-                    found++;
+                const keyA = fixKey(rowA[kA]);
+                const matchB = mapB.get(keyA);
+                
+                if (matchData = matchB) {
+                    const base = Array.from({length: hA.length}, (_, i) => rowA[i] || "");
+                    const extra = keepB.map(i => matchData[i]);
+                    finalResult.push([...base, ...extra]);
+                    matches++;
                 }
             });
 
-            if (found > 0) {
+            if (matches > 0) {
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(result), "Result");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(finalResult), "Final");
                 XLSX.writeFile(wb, "Merged_Data.xlsx");
-                log.innerText = `✅ تمام شد! ${found} ردیف ادغام و دانلود شد.`;
+                log.innerHTML += `<br>✅ موفقیت‌آمیز! ${matches} ردیف ادغام و دانلود شد.`;
             } else {
-                log.innerText = "❌ هیچ تطابقی پیدا نشد. ستون‌ها را چک کنید.";
+                log.innerHTML += `<br>❌ هیچ تطابقی پیدا نشد!`;
+                log.innerHTML += `<br>نمونه کلید فایل اول: ${fixKey(dA[1][kA])}`;
+                log.innerHTML += `<br>نمونه کلید فایل دوم: ${fixKey(dB[1][kB])}`;
             }
-        }, 200);
+        }, 100);
     };
 </script>
 </body>
