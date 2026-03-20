@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Master v8</title>
+    <title>Excel Multi-Tool v9</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -23,23 +23,20 @@
         .upload-card.loaded { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
         select { width: 100%; padding: 10px; background: #1e293b; border: 1px solid var(--border); color: white; border-radius: 10px; margin: 5px 0; outline: none; font-size: 13px; }
         .main-btn { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        .main-btn:active { transform: scale(0.98); }
-        .log-box { background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; border-radius: 10px; margin-top: 15px; max-height: 150px; overflow-y: auto; text-align: left; direction: ltr; }
-        .label-sm { font-size: 11px; color: var(--primary); margin-top: 8px; display: block; }
+        .log-box { background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; border-radius: 10px; margin-top: 15px; max-height: 180px; overflow-y: auto; text-align: left; direction: ltr; }
         footer { margin-top: 20px; font-size: 10px; color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header><h1>Excel Multi-Tool v8</h1></header>
+    <header><h1>Excel Multi-Tool v9</h1></header>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('copyTab')">🚀 کپی ۷۰۰۰ تایی</button>
-        <button class="tab-btn" onclick="switchTab('mergeTab')">🔗 ادغام تمیز</button>
+        <button class="tab-btn" onclick="switchTab('mergeTab')">🔗 ادغام هوشمند</button>
     </div>
 
-    <!-- تب کپی -->
     <div id="copyTab" class="tab-content active">
         <div class="upload-card" id="copyCard">📁 <span id="copyStatus">انتخاب فایل اصلی</span><input type="file" id="copyFile" accept=".xlsx, .xls"></div>
         <div id="copyStep2" style="display:none;">
@@ -48,14 +45,13 @@
         </div>
     </div>
 
-    <!-- تب ادغام -->
     <div id="mergeTab" class="tab-content">
         <div class="upload-card" id="cardA">📁 <span id="statusA">فایل اول (پایه)</span><input type="file" id="fileA" accept=".xlsx, .xls"></div>
         <select id="colA" style="display:none;"></select>
         
         <div class="upload-card" id="cardB" style="margin-top:15px;">📁 <span id="statusB">فایل دوم (مرجع)</span><input type="file" id="fileB" accept=".xlsx, .xls"></div>
         <select id="colB" style="display:none;"></select>
-        <span id="lblPhoneB" class="label-sm" style="display:none;">ستون شماره تلفن در فایل دوم:</span>
+        <span style="font-size:11px;color:var(--primary)">ستون شماره تلفن در فایل دوم:</span>
         <select id="colPhoneB" style="display:none;"></select>
         
         <button id="mergeBtn" class="main-btn" style="display:none;">🧬 شروع عملیات ادغام تمیز</button>
@@ -73,18 +69,22 @@
         event.currentTarget.classList.add('active');
     }
 
+    // استانداردسازی شماره موبایل
     function cleanPhone(val) {
         if (!val) return null;
-        let str = String(val).replace(/\D/g, ''); 
+        let str = String(val).replace(/\s/g, '').replace(/\D/g, ''); 
         if (str.length < 10) return null;
-        let main = str.slice(-10);
-        if (main.startsWith('9')) return '0' + main;
+        let last10 = str.slice(-10);
+        if (last10.startsWith('9')) return '0' + last10;
         return null;
     }
 
+    // استانداردسازی فوق پیشرفته کلید (حذف .0 و فضاها)
     function cleanKey(val) {
-        if (val === undefined || val === null) return "";
-        return String(val).trim().toLowerCase();
+        if (val === undefined || val === null || val === "") return "";
+        let s = String(val).trim().toLowerCase();
+        if (s.endsWith('.0')) s = s.substring(0, s.length - 2); // حذف .0 انتهای اعداد اکسل
+        return s;
     }
 
     function addLog(msg) {
@@ -103,11 +103,10 @@
         window.cData[0].forEach((h, i) => { sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`; });
         document.getElementById('copyStep2').style.display='block';
     });
-
     document.getElementById('copyBtn').addEventListener('click', () => {
         const selIdx = document.getElementById('copyColSelect').value;
         const rows = window.cData.slice(1).map(r => r[selIdx]).filter(c => c);
-        navigator.clipboard.writeText(rows.slice(0, 7000).join('\n')).then(() => alert("۷۰۰۰ تای اول کپی شد"));
+        navigator.clipboard.writeText(rows.slice(0, 7000).join('\n')).then(() => alert("کپی شد"));
     });
 
     // ادغام
@@ -117,7 +116,7 @@
         const wb = XLSX.read(await file.arrayBuffer());
         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
         if(type === 'A') { dA = json; fillS('colA', json[0]); }
-        else { dB = json; fillS('colB', json[0]); fillS('colPhoneB', json[0]); document.getElementById('lblPhoneB').style.display='block'; }
+        else { dB = json; fillS('colB', json[0]); fillS('colPhoneB', json[0]); }
         document.getElementById(stId).innerText = "✅ " + file.name;
         document.getElementById(cardId).classList.add('loaded');
         if(dA && dB) document.getElementById('mergeBtn').style.display='block';
@@ -132,66 +131,72 @@
 
     document.getElementById('mergeBtn').addEventListener('click', () => {
         const kA = document.getElementById('colA').value, kB = document.getElementById('colB').value, pB = document.getElementById('colPhoneB').value;
-        if (kA==="" || kB==="" || pB==="") return alert("لطفاً ستون‌ها را انتخاب کنید.");
+        if (kA==="" || kB==="" || pB==="") return alert("ستون‌ها را انتخاب کنید.");
 
         document.getElementById('debugLog').innerHTML = "";
-        addLog("شروع پردازش تمیز...");
+        addLog("شروع پردازش هوشمند...");
 
         setTimeout(() => {
             try {
                 const mapB = new Map();
-                const headersB = dB[0];
+                const hB = dB[0];
+                const keyNameB = cleanKey(hB[kB]);
 
-                // ۱. پیدا کردن ستون‌هایی که باید حذف شوند (ردیف و مورد جستجو)
+                // ۱. پیدا کردن ستون‌های مفید در فایل دوم
                 const keepIndicesB = [];
-                headersB.forEach((h, i) => {
-                    const headName = String(h || "").trim();
-                    if (i != kB && headName !== "ردیف") {
+                hB.forEach((h, i) => {
+                    const name = String(h || "").trim();
+                    // حذف ستون ردیف و ستون مورد جستجو از فایل دوم
+                    if (name !== "ردیف" && i != kB) {
                         keepIndicesB.push(i);
                     }
                 });
 
-                // ۲. تحلیل فایل مرجع (B)
+                // ۲. تحلیل فایل دوم و ساخت نقشه (Map)
                 dB.slice(1).forEach((row) => {
                     const phone = cleanPhone(row[pB]);
                     const key = cleanKey(row[kB]);
                     if (key && phone) {
-                        const newRow = [...row];
-                        newRow[pB] = phone; // استاندارد کردن شماره
-                        mapB.set(key, newRow);
+                        const cleanRow = [...row];
+                        cleanRow[pB] = phone; // شماره استاندارد
+                        mapB.set(key, cleanRow);
                     }
                 });
 
-                // ۳. ادغام ردیف‌ها (فقط مواردی که پیدا می‌شوند)
-                const headersA = dA[0];
-                const filteredHeadersB = keepIndicesB.map(idx => headersB[idx]);
-                const finalResult = [[...headersA, ...filteredHeadersB]];
+                addLog(`فایل دوم تحلیل شد. موارد دارای شماره معتبر: ${mapB.size}`);
+                if(mapB.size > 0) {
+                    addLog(`نمونه کلید فایل دوم: "${Array.from(mapB.keys())[0]}"`);
+                }
+
+                // ۳. ادغام
+                const hA = dA[0];
+                const filteredHeadersB = keepIndicesB.map(i => hB[i]);
+                const finalResult = [[...hA, ...filteredHeadersB]];
                 let matches = 0;
 
-                dA.slice(1).forEach((rowA) => {
+                dA.slice(1).forEach((rowA, idx) => {
                     const keyA = cleanKey(rowA[kA]);
                     const matchData = mapB.get(keyA);
 
                     if (matchData) {
-                        // تراز کردن داده‌های فایل اول
-                        const baseRow = Array.from({length: headersA.length}, (_, i) => rowA[i] !== undefined ? rowA[i] : "");
-                        // گلچین کردن ستون‌های فایل دوم (حذف ردیف و کلید تکراری)
-                        const filteredDataB = keepIndicesB.map(idx => matchData[idx]);
-                        
-                        finalResult.push([...baseRow, ...filteredDataB]);
+                        const baseRow = Array.from({length: hA.length}, (_, i) => rowA[i] !== undefined ? rowA[i] : "");
+                        const extraData = keepIndicesB.map(i => matchData[i]);
+                        finalResult.push([...baseRow, ...extraData]);
                         matches++;
                     }
+                    
+                    if (idx === 0) addLog(`نمونه کلید فایل اول: "${keyA}"`);
                 });
 
-                addLog(`تعداد ردیف‌های منطبق و دارای شماره: ${matches}`);
+                addLog(`تعداد موارد منطبق شده: ${matches}`);
 
-                if (matches === 0) {
-                    addLog("⚠️ هیچ موردی یافت نشد. فیلترها را چک کنید.");
-                } else {
+                if (matches > 0) {
                     const nWb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(nWb, XLSX.utils.aoa_to_sheet(finalResult), "CleanMerged");
-                    XLSX.writeFile(nWb, "Clean_Result.xlsx");
-                    addLog("✅ فایل تمیز آماده دانلود شد.");
+                    XLSX.utils.book_append_sheet(nWb, XLSX.utils.aoa_to_sheet(finalResult), "Final");
+                    XLSX.writeFile(nWb, "Final_Result.xlsx");
+                    addLog("✅ فایل نهایی دانلود شد.");
+                } else {
+                    addLog("❌ هیچ تطابقی پیدا نشد. نمونه کلیدها را در بالا مقایسه کنید.");
                 }
 
             } catch (err) { addLog("❌ خطا: " + err.message); }
