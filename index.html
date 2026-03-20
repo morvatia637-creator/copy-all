@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pro Master | پاکساز و کپی هوشمند</title>
-    <link href="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js" rel="preload" as="script">
+    <title>Excel Pro Suite | ابزار پیشرفته اکسل</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #818cf8; --primary-dark: #6366f1; --accent: #c084fc;
             --success: #10b981; --danger: #ef4444; --bg: #0f172a;
-            --glass: rgba(30, 41, 59, 0.85); --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(30, 41, 59, 0.8); --border: rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -20,210 +19,210 @@
             color: #f1f5f9; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px;
         }
 
-        .container { width: 100%; max-width: 480px; background: var(--glass); backdrop-filter: blur(20px); border-radius: 32px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); margin-bottom: 20px; }
+        .container { width: 100%; max-width: 500px; background: var(--glass); backdrop-filter: blur(16px); border-radius: 32px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 
-        header h1 { font-size: 24px; margin: 0; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
-        header p { color: #94a3b8; font-size: 13px; text-align: center; margin-top: 5px; }
+        /* استایل تب‌ها */
+        .tabs { display: flex; background: rgba(15, 23, 42, 0.5); padding: 5px; border-radius: 16px; margin-bottom: 25px; gap: 5px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: transparent; color: #94a3b8; cursor: pointer; font-family: 'Vazirmatn'; font-weight: bold; transition: 0.3s; font-size: 13px; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
 
-        /* بخش تنظیمات جدید */
-        .config-panel { background: rgba(15, 23, 42, 0.5); border-radius: 18px; padding: 15px; margin: 20px 0; border: 1px solid var(--border); }
-        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .config-row label { font-size: 12px; color: #cbd5e1; }
-        .config-row input, .config-row select { background: #0f172a; border: 1px solid #334155; color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Vazirmatn'; font-size: 12px; outline: none; }
+        header h1 { font-size: 22px; margin: 0; background: linear-gradient(to left, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-align: center; }
 
-        .upload-section { border: 2px dashed #334155; border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer; position: relative; transition: 0.3s; }
-        .upload-section:active { border-color: var(--primary); }
+        .upload-section { margin: 20px 0; border: 2px dashed #334155; border-radius: 20px; padding: 30px; transition: 0.3s; position: relative; background: rgba(15, 23, 42, 0.4); text-align: center; }
         .upload-section input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-        .control-panel { display: none; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        select, input[type="number"] { width: 100%; padding: 14px; background: #1e293b; border: 1px solid var(--border); color: white; border-radius: 14px; font-family: 'Vazirmatn'; margin-top: 10px; outline: none; }
 
-        .progress-bar-bg { background: #334155; height: 12px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
-        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.5s ease; }
+        .main-btn { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn'; margin-top: 20px; transition: 0.3s; }
+        .main-btn:active { transform: scale(0.96); }
+        .main-btn.success { background: var(--success); }
 
-        .btn-copy { background: linear-gradient(135deg, var(--primary-dark), var(--accent)); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Vazirmatn'; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3); }
-        .btn-copy.success { background: var(--success); }
+        .info-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 16px; margin-top: 15px; font-size: 12px; line-height: 1.8; color: #cbd5e1; border-right: 4px solid var(--primary); }
+        
+        .bar-bg { background: #334155; height: 10px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: 0.5s; }
 
-        .report-box { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px; font-size: 11px; margin-top: 15px; color: #10b981; display: none; }
-
-        footer { text-align: center; padding: 20px; font-size: 12px; color: #64748b; }
-        footer b { color: var(--primary); }
+        footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Excel Phone Pro</h1>
-        <p>پاکساز شماره و کپی هوشمند</p>
+        <h1>Excel Pro Suite</h1>
     </header>
 
-    <!-- پنل تنظیمات -->
-    <div class="config-panel">
-        <div class="config-row">
-            <label>استانداردسازی شماره موبایل (0912...)</label>
-            <select id="fixPhone">
-                <option value="yes">✅ بله (فقط موبایل)</option>
-                <option value="no">❌ خیر (عین متن)</option>
-            </select>
+    <!-- سوئیچ بین تب‌ها -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('copyTab')">🚀 کپی هوشمند</button>
+        <button class="tab-btn" onclick="openTab('fixerTab')">🔧 اصلاح شماره‌ها</button>
+    </div>
+
+    <!-- تب اول: کپی هوشمند -->
+    <div id="copyTab" class="tab-content">
+        <div class="info-box">
+            • فایل را آپلود کنید و ستون مورد نظر را انتخاب کنید.<br>
+            • داده‌ها در بسته‌های ۷۰۰۰ تایی (قابل تغییر) آماده کپی می‌شوند.
         </div>
-        <div class="config-row">
-            <label>تعداد ردیف در هر کپی:</label>
-            <input type="number" id="chunkSize" value="7000" style="width: 70px;">
+        <div class="upload-section" id="upArea1">
+            <span style="font-size:30px;">📂</span><br>
+            <span id="st1">انتخاب فایل برای کپی</span>
+            <input type="file" onchange="handleFile(this, 'copy')">
+        </div>
+        <div id="copyControls" style="display:none;">
+            <select id="colSelectCopy"></select>
+            <input type="number" id="chunkSize" value="7000" placeholder="تعداد در هر کپی">
+            <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
+            <button id="btnCopy" class="main-btn">کپی بسته اول</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:var(--danger); font-family:'Vazirmatn'; font-size:12px; width:100%; margin-top:15px; cursor:pointer;">❌ حذف فایل و شروع مجدد</button>
         </div>
     </div>
 
-    <!-- بخش آپلود -->
-    <div class="upload-section" id="uploadArea">
-        <span style="font-size: 40px; display: block; margin-bottom: 10px;">📊</span>
-        <span id="fileStatus">آپلود فایل اکسل</span>
-        <input type="file" id="fileInput" accept=".xlsx, .xls">
-    </div>
-
-    <!-- انتخاب ستون -->
-    <div id="selectionStep" style="display:none; margin-top: 20px;">
-        <select id="columnSelect" style="width: 100%; padding: 12px; border-radius: 12px; background: #1e293b; color: white; font-family: 'Vazirmatn';"></select>
-    </div>
-
-    <!-- پنل کنترل -->
-    <div id="controlPanel" class="control-panel">
-        <div id="reportBox" class="report-box"></div>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 15px;">
-            <span id="chunkInfo">بخش ۱</span>
-            <span id="totalInfo">کل: ۰ شماره</span>
+    <!-- تب دوم: اصلاح شماره موبایل -->
+    <div id="fixerTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • ستون شماره تلفن را انتخاب کنید.<br>
+            • تمام شماره‌ها به فرمت <b>09123456789</b> تبدیل می‌شوند.<br>
+            • ردیف‌های بدون شماره معتبر <b>حذف</b> خواهند شد.
         </div>
-        <div class="progress-bar-bg"><div id="progressBar" class="progress-bar-fill"></div></div>
-        
-        <button id="copyBtn" class="btn-copy">کپی بسته‌ی اول</button>
-        
-        <button id="resetBtn" style="background: transparent; color: var(--danger); border: none; font-family: 'Vazirmatn'; width: 100%; margin-top: 20px; cursor: pointer; font-size: 12px;">❌ حذف فایل و بازنشانی</button>
+        <div class="upload-section" id="upArea2">
+            <span style="font-size:30px;">📱</span><br>
+            <span id="st2">انتخاب فایل برای اصلاح شماره</span>
+            <input type="file" onchange="handleFile(this, 'fixer')">
+        </div>
+        <div id="fixerControls" style="display:none;">
+            <select id="colSelectFixer"></select>
+            <button id="btnFix" class="main-btn">✨ اصلاح و دانلود فایل جدید</button>
+        </div>
     </div>
 </div>
 
-<footer>طراحی و توسعه برای استفاده شخصی | <b>نسخه حرفه‌ای</b></footer>
+<footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
 
 <script>
-    let processedRows = [];
-    let currentIndex = 0;
+    let rawData = [];
+    let cleanRows = [];
+    let currentIdx = 0;
 
-    // تابع اصلی پاکسازی شماره موبایل
-    function cleanPhone(val) {
-        if (!val) return null;
-        let str = String(val).replace(/\D/g, ''); // فقط اعداد را نگه دار
-
-        // حذف پیش‌شماره‌های کشور
-        if (str.startsWith('98')) str = str.substring(2);
-        if (str.startsWith('0098')) str = str.substring(4);
-
-        // اگر ۱۰ رقم است و با ۹ شروع می‌شود (مثلاً 912...)، یک صفر اولش بگذار
-        if (str.length === 10 && str.startsWith('9')) {
-            str = '0' + str;
-        }
-
-        // چک نهایی: باید ۱۱ رقم باشد و با 09 شروع شود
-        if (str.length === 11 && str.startsWith('09')) {
-            return str;
-        }
-        return null; // اگر شماره موبایل معتبر ایران نبود، حذفش کن
+    // جابجایی بین تب‌ها
+    function openTab(name) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(name).style.display = 'block';
+        event.currentTarget.classList.add('active');
     }
 
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    // خواندن فایل اکسل
+    async function handleFile(input, mode) {
+        const file = input.files[0];
         if (!file) return;
-        document.getElementById('fileStatus').innerText = `در حال خواندن فایل...`;
-        
+
         const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data);
-        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+        const wb = XLSX.read(data);
+        rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+        const headers = rawData[0];
 
-        window.rawExcel = json;
-        const headers = json[0];
-        const select = document.getElementById('columnSelect');
-        select.innerHTML = '<option value="">🎯 انتخاب ستون شماره‌ها...</option>';
-        headers.forEach((h, i) => {
-            const opt = document.createElement('option');
-            opt.value = i; opt.textContent = h || `ستون ${i+1}`;
-            select.appendChild(opt);
-        });
-
-        document.getElementById('uploadArea').style.display = 'none';
-        document.getElementById('selectionStep').style.display = 'block';
-    });
-
-    document.getElementById('columnSelect').addEventListener('change', function() {
-        const colIdx = this.value;
-        if (!colIdx) return;
-
-        const rawData = window.rawExcel.slice(1).map(r => r[colIdx]);
-        const shouldFix = document.getElementById('fixPhone').value === 'yes';
-
-        let cleaned = [];
-        let invalidCount = 0;
-
-        if (shouldFix) {
-            rawData.forEach(item => {
-                const phone = cleanPhone(item);
-                if (phone) cleaned.push(phone);
-                else invalidCount++;
-            });
+        if (mode === 'copy') {
+            const sel = document.getElementById('colSelectCopy');
+            sel.innerHTML = '<option value="">🎯 انتخاب ستون...</option>';
+            headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
+            document.getElementById('upArea1').style.display = 'none';
+            document.getElementById('copyControls').style.display = 'block';
         } else {
-            cleaned = rawData.filter(c => c !== undefined && c !== "");
+            const sel = document.getElementById('colSelectFixer');
+            sel.innerHTML = '<option value="">🎯 انتخاب ستون شماره تلفن...</option>';
+            headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون '+(i+1)}</option>`);
+            document.getElementById('upArea2').style.display = 'none';
+            document.getElementById('fixerControls').style.display = 'block';
         }
-
-        processedRows = cleaned;
-        currentIndex = 0;
-
-        // نمایش گزارش
-        if (shouldFix) {
-            const report = document.getElementById('reportBox');
-            report.style.display = 'block';
-            report.innerText = `✅ پردازش تمام شد: ${cleaned.length} شماره معتبر پیدا شد. (${invalidCount} مورد نامعتبر حذف شد)`;
-        }
-
-        document.getElementById('selectionStep').style.display = 'none';
-        document.getElementById('controlPanel').style.display = 'block';
-        document.getElementById('totalInfo').innerText = `کل شماره‌ها: ${processedRows.length}`;
-        updateUI();
-    });
-
-    function updateUI() {
-        const CHUNK = parseInt(document.getElementById('chunkSize').value) || 7000;
-        const totalParts = Math.ceil(processedRows.length / CHUNK);
-        const currentPart = Math.floor(currentIndex / CHUNK) + 1;
-        
-        document.getElementById('chunkInfo').innerText = `بخش ${currentPart} از ${totalParts}`;
-        const perc = (currentIndex / processedRows.length) * 100;
-        document.getElementById('progressBar').style.width = `${perc}%`;
-
-        const end = Math.min(currentIndex + CHUNK, processedRows.length);
-        document.getElementById('copyBtn').innerText = `📋 کپی ردیف ${currentIndex + 1} تا ${end}`;
     }
 
-    document.getElementById('copyBtn').addEventListener('click', () => {
-        const CHUNK = parseInt(document.getElementById('chunkSize').value) || 7000;
-        const end = Math.min(currentIndex + CHUNK, processedRows.length);
-        const text = processedRows.slice(currentIndex, end).join('\n');
+    // منطق تب اول: کپی هوشمند
+    document.getElementById('colSelectCopy').onchange = function() {
+        const col = this.value;
+        cleanRows = rawData.slice(1).map(r => r[col]).filter(c => c);
+        currentIdx = 0;
+        updateCopyUI();
+    };
+
+    function updateCopyUI() {
+        const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
+        const end = Math.min(currentIdx + chunk, cleanRows.length);
+        document.getElementById('btnCopy').innerText = `📋 کپی ردیف ${currentIdx+1} تا ${end}`;
+        document.getElementById('bar1').style.width = (currentIdx / cleanRows.length * 100) + '%';
+    }
+
+    document.getElementById('btnCopy').onclick = function() {
+        const chunk = parseInt(document.getElementById('chunkSize').value) || 7000;
+        const end = Math.min(currentIdx + chunk, cleanRows.length);
+        const text = cleanRows.slice(currentIdx, end).join('\n');
 
         navigator.clipboard.writeText(text).then(() => {
-            if (navigator.vibrate) navigator.vibrate(50);
-            const btn = document.getElementById('copyBtn');
-            btn.innerText = "کپی شد! ✅";
-            btn.classList.add('success');
-
+            this.innerText = "کپی شد! ✅";
+            this.classList.add('success');
             setTimeout(() => {
-                btn.classList.remove('success');
-                if (end < processedRows.length) {
-                    currentIndex += CHUNK;
-                    updateUI();
+                this.classList.remove('success');
+                if (end < cleanRows.length) {
+                    currentIdx += chunk;
+                    updateCopyUI();
                 } else {
-                    btn.innerText = "پایان فایل 🎉";
+                    this.innerText = "پایان فایل 🎉";
                 }
             }, 1000);
         });
-    });
+    };
 
-    document.getElementById('resetBtn').addEventListener('click', () => { location.reload(); });
+    // منطق تب دوم: اصلاح شماره موبایل
+    document.getElementById('btnFix').onclick = function() {
+        const colIdx = document.getElementById('colSelectFixer').value;
+        if (!colIdx) return alert("لطفا ستون را انتخاب کنید");
+
+        this.innerText = "در حال پردازش... ⏳";
+        
+        // فیلتر و اصلاح
+        const processedData = rawData.slice(1).map(row => {
+            let phone = String(row[colIdx] || "");
+            let fixed = fixPhone(phone);
+            if (fixed) {
+                let newRow = [...row];
+                newRow[colIdx] = fixed; // جایگزینی شماره اصلاح شده
+                return newRow;
+            }
+            return null;
+        }).filter(r => r !== null);
+
+        // ساخت فایل جدید
+        const newWb = XLSX.utils.book_new();
+        const newWs = XLSX.utils.aoa_to_sheet([rawData[0], ...processedData]);
+        XLSX.utils.book_append_sheet(newWb, newWs, "Fixed Numbers");
+        
+        // دانلود
+        XLSX.writeFile(newWb, "Fixed_Phones.xlsx");
+        this.innerText = "فایل آماده شد! ✅";
+        setTimeout(() => this.innerText = "✨ اصلاح و دانلود فایل جدید", 3000);
+    };
+
+    // تابع اصلی اصلاح شماره تلفن
+    function fixPhone(val) {
+        // حذف تمام کاراکترهای غیر عددی
+        let n = val.replace(/\D/g, '');
+        
+        // تبدیل اعداد فارسی/عربی به انگلیسی
+        n = n.replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+             .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+        // اگر با 98 شروع شده، با 0 جایگزین کن
+        if (n.startsWith('98')) n = '0' + n.substring(2);
+        
+        // اگر 10 رقمی است و با 9 شروع شده، یک 0 اولش بذار
+        if (n.length === 10 && n.startsWith('9')) n = '0' + n;
+
+        // بررسی نهایی: باید 11 رقم باشد و با 09 شروع شود
+        if (n.length === 11 && n.startsWith('09')) {
+            return n;
+        }
+        return null; // معتبر نیست
+    }
 </script>
 
 </body>
