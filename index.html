@@ -93,6 +93,17 @@
         .preview-box .pv-head { color: #818cf8; font-weight: bold; margin-bottom: 4px; display: block; font-family: 'Vazirmatn'; font-size: 11px; direction: rtl; }
         footer { text-align: center; margin-top: 20px; font-size: 12px; color: #64748b; }
         .reset-btn { background: none; border: none; color: var(--danger); font-family: 'Vazirmatn'; font-size: 12px; width: 100%; margin-top: 12px; cursor: pointer; }
+
+        /* لیست فایل‌های ترکیب */
+        .file-chip {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 12px; padding: 10px 14px; margin-bottom: 7px;
+            font-size: 12px; color: #c7d2fe;
+        }
+        .file-chip .fc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-chip .fc-rows { color: #64748b; font-size: 11px; margin-right: 8px; white-space: nowrap; }
+        .file-chip .fc-del { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 0 0 4px; }
     </style>
 </head>
 <body>
@@ -102,6 +113,7 @@
         <button class="tab-btn active" onclick="openTab('copyTab',this)">🚀 کپی هوشمند</button>
         <button class="tab-btn" onclick="openTab('fixerTab',this)">🔧 اصلاح شماره</button>
         <button class="tab-btn" onclick="openTab('mergeTab',this)">🔗 ادغام فایل‌ها</button>
+        <button class="tab-btn" onclick="openTab('combineTab',this)">📚 ترکیب فایل‌ها</button>
     </div>
 
     <!-- تب اول -->
@@ -177,6 +189,31 @@
         <div class="result-box" id="mergeResult"></div>
         <div class="warn-box" id="mergeWarn"></div>
         <button onclick="resetMerge()" class="reset-btn">❌ شروع مجدد</button>
+    </div>
+
+    <!-- تب چهارم: ترکیب فایل‌ها -->
+    <div id="combineTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            • چند فایل اکسل انتخاب کنید (۲ فایل یا بیشتر).<br>
+            • ستون‌ها بر اساس <b>هدر</b> تطبیق داده می‌شوند.<br>
+            • ردیف‌های کاملاً خالی <b>حذف</b> می‌شوند.<br>
+            • یک فایل ترکیبی دانلود می‌شود.
+        </div>
+
+        <div class="upload-section" id="combineUpArea" style="padding:28px;">
+            <span style="font-size:34px;">📚</span><br>
+            <span id="combineSt">چند فایل را با هم انتخاب کنید</span><br>
+            <small style="color:#64748b;font-size:11px;">می‌توانید چند فایل را همزمان انتخاب کنید</small>
+            <input type="file" accept=".xlsx,.xls,.csv" multiple onchange="handleCombineFiles(this)">
+        </div>
+
+        <div id="combineFileList" style="display:none;">
+            <p class="section-label">📋 فایل‌های انتخاب‌شده:</p>
+            <div id="combineListItems" style="margin-top:8px;"></div>
+            <button id="btnCombine" class="main-btn" onclick="doCombine()">📚 ترکیب و دانلود فایل نهایی</button>
+            <div class="result-box" id="combineResult"></div>
+            <button onclick="resetCombine()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
     </div>
 </div>
 <footer>طراحی و توسعه برای مدیریت هوشمند اکسل</footer>
@@ -412,6 +449,134 @@ function doMerge() {
 
     btn.innerText='✅ فایل دانلود شد!'; btn.classList.add('success');
     setTimeout(()=>{ btn.innerText='🔗 ادغام و دانلود فایل نهایی'; btn.classList.remove('success'); btn.disabled=false; },3000);
+}
+
+// ===== تب چهارم: ترکیب فایل‌ها =====
+let combineFiles = []; // [{name, rows, headers}]
+
+async function handleCombineFiles(input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+
+    for (const file of files) {
+        // جلوگیری از اضافه شدن دوباره همان فایل
+        if (combineFiles.find(f => f.name === file.name)) continue;
+        const wb = XLSX.read(await file.arrayBuffer());
+        const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true});
+        const headers = data[0] || [];
+        const rows = data.slice(1);
+        combineFiles.push({ name: file.name, headers, rows });
+    }
+
+    renderCombineList();
+    input.value = ''; // reset input تا بشه دوباره همان فایل رو انتخاب کرد
+}
+
+function renderCombineList() {
+    if (combineFiles.length === 0) {
+        document.getElementById('combineFileList').style.display = 'none';
+        document.getElementById('combineUpArea').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('combineUpArea').style.display = 'block';
+    document.getElementById('combineFileList').style.display = 'block';
+    document.getElementById('combineSt').textContent = 'فایل‌های بیشتری اضافه کنید';
+
+    const listEl = document.getElementById('combineListItems');
+    listEl.innerHTML = combineFiles.map((f, i) => `
+        <div class="file-chip">
+            <span class="fc-name">📄 ${f.name}</span>
+            <span class="fc-rows">${f.rows.length} ردیف</span>
+            <button class="fc-del" onclick="removeCombineFile(${i})">✕</button>
+        </div>
+    `).join('');
+
+    document.getElementById('combineResult').style.display = 'none';
+}
+
+function removeCombineFile(idx) {
+    combineFiles.splice(idx, 1);
+    renderCombineList();
+}
+
+function doCombine() {
+    if (combineFiles.length < 2) return alert('حداقل ۲ فایل انتخاب کنید');
+
+    const btn = document.getElementById('btnCombine');
+    btn.innerText = '⏳ در حال پردازش...';
+    btn.disabled = true;
+
+    // جمع‌آوری تمام هدرها (union) با حفظ ترتیب
+    const allHeaders = [];
+    const headerSet = new Set();
+    for (const f of combineFiles) {
+        for (const h of f.headers) {
+            const key = String(h).trim();
+            if (key && !headerSet.has(key)) {
+                headerSet.add(key);
+                allHeaders.push(key);
+            }
+        }
+    }
+
+    // ساخت ردیف‌های خروجی
+    const outputRows = [allHeaders];
+    let totalRows = 0, removedEmpty = 0;
+
+    for (const f of combineFiles) {
+        // map: هدر → ایندکس در این فایل
+        const colMap = {};
+        f.headers.forEach((h, i) => {
+            const key = String(h).trim();
+            if (key) colMap[key] = i;
+        });
+
+        for (const row of f.rows) {
+            // بررسی اینکه ردیف کاملاً خالی هست یا نه
+            const hasData = row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
+            if (!hasData) { removedEmpty++; continue; }
+
+            // ساخت ردیف با ترتیب هدرهای نهایی
+            const newRow = allHeaders.map(h => {
+                const idx = colMap[h];
+                return idx !== undefined ? (row[idx] ?? '') : '';
+            });
+            outputRows.push(newRow);
+            totalRows++;
+        }
+    }
+
+    // دانلود
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(outputRows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Combined');
+    XLSX.writeFile(wb, 'Combined_Result.xlsx');
+
+    const r = document.getElementById('combineResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل نهایی آماده شد!<br>
+        📁 تعداد فایل‌های ترکیب‌شده: <b>${combineFiles.length}</b><br>
+        🟢 مجموع ردیف‌های خروجی: <b>${totalRows}</b><br>
+        🗑️ ردیف‌های خالی حذف‌شده: <b>${removedEmpty}</b><br>
+        📊 تعداد ستون‌ها: <b>${allHeaders.length}</b>`;
+
+    btn.innerText = '✅ فایل دانلود شد!';
+    btn.classList.add('success');
+    setTimeout(() => {
+        btn.innerText = '📚 ترکیب و دانلود فایل نهایی';
+        btn.classList.remove('success');
+        btn.disabled = false;
+    }, 3000);
+}
+
+function resetCombine() {
+    combineFiles = [];
+    document.getElementById('combineListItems').innerHTML = '';
+    document.getElementById('combineFileList').style.display = 'none';
+    document.getElementById('combineUpArea').style.display = 'block';
+    document.getElementById('combineSt').textContent = 'چند فایل را با هم انتخاب کنید';
+    document.getElementById('combineResult').style.display = 'none';
 }
 
 function resetMerge() {
