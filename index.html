@@ -1093,7 +1093,7 @@ let APP_PASSWORD=null;
 async function loadConfig(){
     if(sessionStorage.getItem('unlocked')==='1'){document.getElementById('lockScreen').style.display='none';return;}
     try{const res=await fetch('config.json?v='+Date.now());const cfg=await res.json();APP_PASSWORD=cfg.password;}
-    catch(e){APP_PASSWORD='excel1404';}
+    catch(e){APP_PASSWORD='7716';}
 }
 function checkPassword(){
     const input=document.getElementById('pwdInput');
