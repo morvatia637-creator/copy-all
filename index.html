@@ -226,7 +226,7 @@
             <input type="number" id="chunkSize" value="7000" placeholder="تعداد در هر کپی">
             <div class="bar-bg"><div id="bar1" class="bar-fill"></div></div>
             <button id="btnCopy" class="main-btn">کپی بسته اول</button>
-            <button onclick="location.reload()" class="reset-btn">❌ حذف فایل و شروع مجدد</button>
+            <button onclick="clearCopyState(); location.reload()" class="reset-btn">❌ حذف فایل و شروع مجدد</button>
         </div>
     </div>
 
@@ -524,6 +524,51 @@ function fixPhone(val) {
 // ===== تب‌ها =====
 let rawData = [], cleanRows = [], currentIdx = 0;
 
+// ===== ذخیره و بازیابی وضعیت تب کپی =====
+function saveCopyState() {
+    try {
+        sessionStorage.setItem('copyRows', JSON.stringify(cleanRows));
+        sessionStorage.setItem('copyIdx', currentIdx);
+        sessionStorage.setItem('copyChunk', document.getElementById('chunkSize').value || '7000');
+    } catch(e) {}
+}
+
+function restoreCopyState() {
+    try {
+        const saved = sessionStorage.getItem('copyRows');
+        if (!saved) return;
+        cleanRows = JSON.parse(saved);
+        currentIdx = parseInt(sessionStorage.getItem('copyIdx') || '0');
+        const chunk = sessionStorage.getItem('copyChunk') || '7000';
+        document.getElementById('chunkSize').value = chunk;
+        if (cleanRows.length > 0) {
+            document.getElementById('upArea1').style.display = 'none';
+            document.getElementById('copyControls').style.display = 'block';
+            // ستون انتخاب‌شده رو نشون بده
+            const sel = document.getElementById('colSelectCopy');
+            sel.innerHTML = '<option value="0">ستون ذخیره‌شده</option>';
+            updateCopyUI();
+            // نشون بده که از session بازیابی شده
+            document.getElementById('st1').textContent = '✅ فایل قبلی بازیابی شد';
+            const info = document.createElement('div');
+            info.className = 'info-box';
+            info.style.cssText = 'border-right-color:#f59e0b;margin-top:8px;';
+            info.innerHTML = `⚡ وضعیت قبل از رفرش بازیابی شد — ردیف <b>${currentIdx+1}</b> از <b>${cleanRows.length}</b>`;
+            const ctrl = document.getElementById('copyControls');
+            if (!document.getElementById('copyRestoreInfo')) {
+                info.id = 'copyRestoreInfo';
+                ctrl.insertBefore(info, ctrl.firstChild);
+            }
+        }
+    } catch(e) {}
+}
+
+function clearCopyState() {
+    sessionStorage.removeItem('copyRows');
+    sessionStorage.removeItem('copyIdx');
+    sessionStorage.removeItem('copyChunk');
+}
+
 function openTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -554,7 +599,9 @@ async function handleFile(input, mode) {
 
 document.getElementById('colSelectCopy').onchange = function() {
     cleanRows = rawData.slice(1).map(r => r[this.value]).filter(c => c != null && c !== '');
-    currentIdx = 0; updateCopyUI();
+    currentIdx = 0;
+    saveCopyState();
+    updateCopyUI();
 };
 function updateCopyUI() {
     const chunk = parseInt(document.getElementById('chunkSize').value)||7000;
@@ -567,7 +614,17 @@ document.getElementById('btnCopy').onclick = function() {
     const end = Math.min(currentIdx+chunk, cleanRows.length);
     navigator.clipboard.writeText(cleanRows.slice(currentIdx,end).join('\n')).then(() => {
         this.innerText="کپی شد! ✅"; this.classList.add('success');
-        setTimeout(() => { this.classList.remove('success'); if(end<cleanRows.length){currentIdx+=chunk;updateCopyUI();}else this.innerText="پایان فایل 🎉"; }, 1000);
+        setTimeout(() => {
+            this.classList.remove('success');
+            if(end<cleanRows.length){
+                currentIdx+=chunk;
+                saveCopyState();
+                updateCopyUI();
+            } else {
+                this.innerText="پایان فایل 🎉";
+                clearCopyState();
+            }
+        }, 1000);
     });
 };
 document.getElementById('btnFix').onclick = function() {
@@ -969,6 +1026,8 @@ function checkPassword(){
     }
 }
 loadConfig();
+// بازیابی وضعیت تب کپی بعد از رفرش
+restoreCopyState();
 
 // ===== تب هفتم: اشتراک‌گیری =====
 let intData1=null,intData2=null;
