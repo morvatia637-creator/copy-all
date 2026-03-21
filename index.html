@@ -1089,16 +1089,12 @@ function resetNid(){
 }
 
 // ===== رمز عبور =====
-let APP_PASSWORD=null;
-async function loadConfig(){
-    if(sessionStorage.getItem('unlocked')==='1'){document.getElementById('lockScreen').style.display='none';return;}
-    try{const res=await fetch('config.json?v='+Date.now());const cfg=await res.json();APP_PASSWORD=cfg.password;}
-    catch(e){APP_PASSWORD='7716';}
-}
+// ===== رمز عبور =====
+const APP_PASSWORD = 'excel1404';
+
 function checkPassword(){
     const input=document.getElementById('pwdInput');
     const error=document.getElementById('lockError');
-    if(!APP_PASSWORD){error.textContent='⏳ در حال بارگذاری...';return;}
     if(input.value===APP_PASSWORD){
         document.getElementById('lockScreen').style.display='none';
         sessionStorage.setItem('unlocked','1');
@@ -1108,7 +1104,11 @@ function checkPassword(){
         setTimeout(()=>{input.classList.remove('shake');error.textContent='';},1500);
     }
 }
-loadConfig();
+
+// اگر قبلاً در این session باز شده بود
+if(sessionStorage.getItem('unlocked')==='1'){
+    document.getElementById('lockScreen').style.display='none';
+}
 // بازیابی وضعیت تب کپی بعد از رفرش
 restoreCopyState();
 
