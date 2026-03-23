@@ -800,6 +800,25 @@
                 </div>
             </div>
 
+            <!-- پیش‌نمایش زنده خروجی -->
+            <div id="cbPreviewWrap" style="display:none;margin-top:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <p class="section-label" style="margin:0;">👁️ پیش‌نمایش خروجی <span id="cbPreviewMeta" style="color:#64748b;font-weight:normal;font-size:11px;"></span></p>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:11px;color:#64748b;">نمایش</span>
+                        <select id="cbPreviewRows" onchange="cbRenderPreview()" style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);color:white;border-radius:8px;padding:4px 8px;font-family:Vazirmatn;font-size:11px;outline:none;">
+                            <option value="5">۵ ردیف</option>
+                            <option value="10" selected>۱۰ ردیف</option>
+                            <option value="20">۲۰ ردیف</option>
+                            <option value="50">۵۰ ردیف</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="cbPreviewTableWrap" style="overflow-x:auto;overflow-y:auto;max-height:320px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(15,23,42,0.5);">
+                    <table id="cbPreviewTable" style="border-collapse:collapse;width:max-content;min-width:100%;font-family:Vazirmatn;font-size:11px;direction:rtl;"></table>
+                </div>
+            </div>
+
             <div class="warn-box" id="cbWarn"></div>
             <button id="btnCb" class="main-btn" onclick="doCbBuild()" disabled>🏗️ ساخت و دانلود فایل خروجی</button>
             <div class="result-box" id="cbResult"></div>
@@ -885,6 +904,25 @@
     color: #334155; font-size: 14px; cursor: grab; flex-shrink: 0;
     padding: 0 2px;
 }
+/* جدول پیش‌نمایش خروجی */
+#cbPreviewTable th {
+    background: rgba(99,102,241,0.18); color: #a5b4fc;
+    padding: 9px 14px; text-align: right; font-weight: 700; font-size: 11px;
+    white-space: nowrap; position: sticky; top: 0; z-index: 2;
+    border-bottom: 1px solid rgba(99,102,241,0.25);
+}
+#cbPreviewTable th .cb-th-src {
+    display: block; font-size: 9px; color: #6366f1; font-weight: normal;
+    font-family: monospace; margin-top: 2px;
+}
+#cbPreviewTable td {
+    padding: 7px 14px; color: #cbd5e1; white-space: nowrap;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+#cbPreviewTable tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+#cbPreviewTable tr:hover td { background: rgba(99,102,241,0.07); }
+.cb-preview-empty-cell { color: #334155 !important; font-style: italic; }
 </style>
 <style>
 /* استایل دکمه‌های ستون در تب الگوی متنی */
@@ -2715,8 +2753,6 @@ function cbRenderOutList() {
         row.className = 'cb-out-row';
         row.draggable = true;
         row.dataset.uid = col.uid;
-
-        // drag events
         row.addEventListener('dragstart', e => { cbDragUid = col.uid; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
         row.addEventListener('dragend', () => { cbDragUid = null; row.classList.remove('dragging'); document.querySelectorAll('.cb-out-row').forEach(r => r.classList.remove('drag-over')); });
         row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.classList.add('drag-over'); });
@@ -2744,7 +2780,10 @@ function cbRenderOutList() {
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.value = col.label;
-        nameInput.oninput = () => { cbOutputCols[cbOutputCols.findIndex(c => c.uid === col.uid)].label = nameInput.value; };
+        nameInput.oninput = () => {
+            cbOutputCols[cbOutputCols.findIndex(c => c.uid === col.uid)].label = nameInput.value;
+            cbRenderPreview();
+        };
 
         const upBtn = document.createElement('button');
         upBtn.className = 'cb-order-btn'; upBtn.textContent = '↑'; upBtn.title = 'بالاتر';
@@ -2763,6 +2802,61 @@ function cbRenderOutList() {
         row.append(handle, tag, nameInput, upBtn, downBtn, delBtn);
         list.appendChild(row);
     });
+    // به‌روزرسانی پیش‌نمایش
+    cbRenderPreview();
+}
+
+function cbRenderPreview() {
+    const wrap = document.getElementById('cbPreviewWrap');
+    const table = document.getElementById('cbPreviewTable');
+    const meta = document.getElementById('cbPreviewMeta');
+
+    if (cbOutputCols.length === 0) {
+        wrap.style.display = 'none';
+        return;
+    }
+    wrap.style.display = 'block';
+
+    const previewCount = parseInt(document.getElementById('cbPreviewRows').value) || 10;
+    const len1 = cbData1 ? cbData1.length - 1 : 0;
+    const len2 = cbData2 ? cbData2.length - 1 : 0;
+    const maxRows = Math.max(len1, len2);
+    const showRows = Math.min(previewCount, maxRows);
+
+    meta.textContent = `— نمایش ${showRows} از ${maxRows.toLocaleString('fa-IR')} ردیف`;
+
+    // ساخت هدر
+    let html = '<thead><tr>';
+    html += '<th style="color:#475569;font-size:10px;min-width:32px;text-align:center;">#</th>';
+    cbOutputCols.forEach(col => {
+        const srcData = col.fileIdx === 1 ? cbData1 : cbData2;
+        const origName = srcData ? String((srcData[0] || [])[col.colIdx] || '') : '';
+        html += `<th>${col.label}<span class="cb-th-src">F${col.fileIdx} · ${origName || 'ستون ' + (col.colIdx + 1)}</span></th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // ساخت ردیف‌های داده
+    for (let r = 0; r < showRows; r++) {
+        html += '<tr>';
+        html += `<td style="color:#475569;font-size:10px;text-align:center;">${r + 1}</td>`;
+        cbOutputCols.forEach(col => {
+            const data = col.fileIdx === 1 ? cbData1 : cbData2;
+            let val = '';
+            if (data && data[r + 1] !== undefined) {
+                const v = data[r + 1][col.colIdx];
+                val = v !== null && v !== undefined ? String(v) : '';
+            }
+            if (val === '') {
+                html += `<td class="cb-preview-empty-cell" title="خالی">—</td>`;
+            } else {
+                const escaped = val.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html += `<td title="${escaped}">${escaped}</td>`;
+            }
+        });
+        html += '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
 }
 
 function doCbBuild() {
@@ -2832,6 +2926,8 @@ function resetCb() {
     document.getElementById('cbOutList').appendChild(document.getElementById('cbOutEmpty'));
     document.getElementById('cbOutEmpty').style.display = 'block';
     document.getElementById('cbOutCount').textContent = '';
+    document.getElementById('cbPreviewWrap').style.display = 'none';
+    document.getElementById('cbPreviewTable').innerHTML = '';
     ['cbResult','cbWarn'].forEach(id => document.getElementById(id).style.display = 'none');
     document.getElementById('btnCb').disabled = true;
 }
