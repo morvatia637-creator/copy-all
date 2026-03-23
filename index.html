@@ -224,6 +224,25 @@
         <div class="lock-error" id="lockError"></div>
     </div>
 </div>
+<script>
+var APP_PASSWORD = 'excel1404';
+function checkPassword(){
+    var input = document.getElementById('pwdInput');
+    var error = document.getElementById('lockError');
+    if(!input) return;
+    if(input.value === APP_PASSWORD){
+        document.getElementById('lockScreen').style.display='none';
+        sessionStorage.setItem('unlocked','1');
+    } else {
+        error.textContent='❌ رمز اشتباه است';
+        input.classList.add('shake'); input.value='';
+        setTimeout(function(){ input.classList.remove('shake'); error.textContent=''; }, 1500);
+    }
+}
+if(sessionStorage.getItem('unlocked')==='1'){
+    document.getElementById('lockScreen').style.display='none';
+}
+</script>
 
 <div class="container">
     <header>
@@ -1174,33 +1193,7 @@ function resetNid(){
     document.getElementById('btnNid').disabled=true;
 }
 
-// ===== رمز عبور =====
-var APP_PASSWORD = 'excel1404';
-
-function checkPassword(){
-    const input=document.getElementById('pwdInput');
-    const error=document.getElementById('lockError');
-    const entered = input.value;
-    const stored = APP_PASSWORD;
-    // debug موقت
-    console.log('entered:', JSON.stringify(entered), 'len:', entered.length);
-    console.log('stored:', JSON.stringify(stored), 'len:', stored.length);
-    if(entered===stored){
-        document.getElementById('lockScreen').style.display='none';
-        sessionStorage.setItem('unlocked','1');
-    } else {
-        console.log('NO MATCH');
-        error.textContent='❌ رمز اشتباه است';
-        input.classList.add('shake'); input.value='';
-        setTimeout(()=>{input.classList.remove('shake');error.textContent='';},1500);
-    }
-}
-
-// اگر قبلاً در این session باز شده بود
-if(sessionStorage.getItem('unlocked')==='1'){
-    document.getElementById('lockScreen').style.display='none';
-}
-// بازیابی وضعیت تب کپی بعد از رفرش
+// ===== بازیابی وضعیت تب کپی =====
 restoreCopyState();
 
 // ===== تب هفتم: اشتراک‌گیری =====
