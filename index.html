@@ -183,6 +183,33 @@
         .pv-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         #pvSearch { width: 100%; padding: 12px 14px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 14px; font-family: 'Vazirmatn'; font-size: 13px; outline: none; margin-top: 10px; }
         #pvSearch::placeholder { color: #475569; }
+
+        /* استایل‌های تب لینک کامنت اینستاگرام */
+        .ig-link-input {
+            width: 100%; padding: 13px; background: #1e293b;
+            border: 1px solid var(--border); color: white; border-radius: 14px;
+            font-family: 'Vazirmatn'; margin-top: 10px; outline: none;
+            font-size: 13px; direction: ltr;
+        }
+        .ig-link-input::placeholder { color: #475569; direction: rtl; font-size: 12px; }
+        .ig-link-input:focus { border-color: var(--primary); }
+        .ig-shortcode-badge {
+            display: inline-block; background: rgba(192,132,252,0.15);
+            border: 1px solid rgba(192,132,252,0.3); border-radius: 10px;
+            padding: 6px 14px; font-size: 12px; color: #c084fc;
+            font-family: monospace; margin-top: 8px; letter-spacing: 1px;
+            direction: ltr;
+        }
+        .ig-preview-row {
+            background: rgba(15,23,42,0.6); border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 12px; padding: 10px 14px; margin-top: 8px;
+            font-size: 11px; direction: ltr; font-family: monospace;
+            color: #94a3b8; overflow-x: auto; white-space: nowrap;
+            display: none;
+        }
+        .ig-preview-row span.ig-comment-id { color: #818cf8; }
+        .ig-preview-row span.ig-arrow { color: #475569; margin: 0 6px; }
+        .ig-preview-row span.ig-link { color: #34d399; }
     </style>
 </head>
 <body>
@@ -209,6 +236,7 @@
         <button class="tab-btn" onclick="openTab('intersectTab',this)">🔍 اشتراک</button>
         <button class="tab-btn" onclick="openTab('dedupTab',this)">🧹 حذف تکراری</button>
         <button class="tab-btn" onclick="openTab('previewTab',this)">👁️ پیش‌نمایش</button>
+        <button class="tab-btn" onclick="openTab('igLinkTab',this)">📎 لینک کامنت</button>
     </div>
 
     <!-- تب اول -->
@@ -450,6 +478,63 @@
             <button onclick="resetPreview()" class="reset-btn">❌ بستن فایل</button>
         </div>
     </div>
+
+    <!-- تب دهم: لینک‌ساز کامنت اینستاگرام -->
+    <div id="igLinkTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            <b>📌 این ابزار چه کاری انجام می‌دهد؟</b><br>
+            برای هر کامنت اینستاگرام یک لینک مستقیم می‌سازد که با کلیک روی آن، دقیقاً همان نظر در اینستاگرام باز می‌شود.<br><br>
+
+            <b>📋 مراحل استفاده:</b><br>
+            <b>۱.</b> فایل اکسل خود را آپلود کنید — فایل باید حاوی ستونی با <b>Comment ID</b> (شناسه یکتای کامنت) باشد.<br>
+            <b>۲.</b> ستونی که Comment ID در آن قرار دارد را انتخاب کنید.<br>
+            <b>۳.</b> لینک پست اینستاگرام را وارد کنید.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;مثال: <span style="direction:ltr;display:inline-block;color:#c084fc;font-size:11px;">https://www.instagram.com/p/DWHC8pbB5EG/</span><br>
+            <b>۴.</b> سیستم به‌صورت خودکار <b>Shortcode</b> پست را از لینک استخراج می‌کند.<br>
+            <b>۵.</b> دکمه «ساخت لینک‌ها» را بزنید تا یک فایل اکسل جدید دانلود شود.<br><br>
+
+            <b>🔗 فرمت لینک خروجی:</b><br>
+            <span style="direction:ltr;display:inline-block;font-size:11px;color:#94a3b8;">https://www.instagram.com/p/[SHORTCODE]/c/[COMMENT_ID]/</span><br><br>
+
+            <b>⚠️ نکات مهم:</b><br>
+            • Comment ID باید عدد باشد (مثلاً <span style="direction:ltr;display:inline-block;font-size:11px;color:#94a3b8;">18062540354392499</span>).<br>
+            • لینک پست باید از قسمت <b>/p/</b> داشته باشد.<br>
+            • اگر سلولی Comment ID معتبر نداشت، آن سلول خالی می‌ماند.<br>
+            • تمام ستون‌های دیگر فایل اصلی <b>بدون تغییر</b> در خروجی حفظ می‌شوند و یک ستون جدید با عنوان <b>Comment Link</b> اضافه می‌شود.
+        </div>
+
+        <div class="upload-section" id="igUpArea">
+            <span style="font-size:30px;">📂</span><br>
+            <span id="igSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleIgFile(this)">
+        </div>
+
+        <div id="igControls" style="display:none;">
+            <p class="section-label">ستون Comment ID:</p>
+            <select id="igCommentCol" onchange="igUpdatePreview()"></select>
+
+            <p class="section-label">لینک پست اینستاگرام:</p>
+            <input type="text" class="ig-link-input" id="igPostUrl"
+                placeholder="مثال: https://www.instagram.com/p/DWHC8pbB5EG/"
+                oninput="igUpdatePreview()">
+
+            <div id="igShortcodeWrap" style="display:none;margin-top:8px;">
+                <span style="font-size:11px;color:#94a3b8;">Shortcode شناسایی‌شده: </span>
+                <span class="ig-shortcode-badge" id="igShortcodeBadge"></span>
+            </div>
+
+            <div class="ig-preview-row" id="igPreviewRow">
+                <span id="igPreviewContent"></span>
+            </div>
+
+            <div class="warn-box" id="igWarnBox"></div>
+
+            <button id="btnIgLink" class="main-btn" onclick="doIgLink()" disabled>📎 ساخت لینک‌ها و دانلود فایل</button>
+            <div class="result-box" id="igResult"></div>
+            <button onclick="resetIg()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+
 </div>
 
 <footer>طراحی و توسعه: سایبری لرستان</footer>
@@ -544,11 +629,9 @@ function restoreCopyState() {
         if (cleanRows.length > 0) {
             document.getElementById('upArea1').style.display = 'none';
             document.getElementById('copyControls').style.display = 'block';
-            // ستون انتخاب‌شده رو نشون بده
             const sel = document.getElementById('colSelectCopy');
             sel.innerHTML = '<option value="0">ستون ذخیره‌شده</option>';
             updateCopyUI();
-            // نشون بده که از session بازیابی شده
             document.getElementById('st1').textContent = '✅ فایل قبلی بازیابی شد';
             const info = document.createElement('div');
             info.className = 'info-box';
@@ -1026,7 +1109,6 @@ function checkPassword(){
     }
 }
 loadConfig();
-// بازیابی وضعیت تب کپی بعد از رفرش
 restoreCopyState();
 
 // ===== تب هفتم: اشتراک‌گیری =====
@@ -1228,9 +1310,7 @@ function renderPreviewTable(){
     document.getElementById('pvPager').innerHTML=pager;
 }
 
-// ===== پنل محتوای کامل سلول =====
 let pvCurrentVal = '';
-
 function pvCellClick(val, colName) {
     const decoded = val.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
     const decodedCol = colName.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
@@ -1241,10 +1321,8 @@ function pvCellClick(val, colName) {
     btn.textContent = '📋 کپی';
     btn.classList.remove('done');
     document.getElementById('pvDetailPanel').style.display = 'block';
-    // اسکرول به پنل
     document.getElementById('pvDetailPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
-
 function pvDetailCopy() {
     navigator.clipboard.writeText(pvCurrentVal).then(() => {
         const btn = document.getElementById('pvDetailCopyBtn');
@@ -1253,12 +1331,10 @@ function pvDetailCopy() {
         setTimeout(() => { btn.textContent='📋 کپی'; btn.classList.remove('done'); }, 2000);
     });
 }
-
 function pvDetailClose() {
     document.getElementById('pvDetailPanel').style.display = 'none';
     pvCurrentVal = '';
 }
-
 function pvSort(colIdx){
     if(pvSortCol===colIdx) pvSortDir*=-1;
     else{pvSortCol=colIdx;pvSortDir=1;}
@@ -1272,6 +1348,183 @@ function resetPreview(){
     document.getElementById('pvControls').style.display='none';
     document.getElementById('pvTable').innerHTML='';
     document.getElementById('pvSearch').value='';
+}
+
+// ===== تب دهم: لینک‌ساز کامنت اینستاگرام =====
+let igRawData = null;
+
+// استخراج shortcode از لینک اینستاگرام
+function extractIgShortcode(url) {
+    if (!url) return null;
+    url = url.trim();
+    // پشتیبانی از فرمت‌های مختلف لینک اینستاگرام
+    const patterns = [
+        /instagram\.com\/p\/([A-Za-z0-9_\-]+)/,
+        /instagram\.com\/reel\/([A-Za-z0-9_\-]+)/,
+        /instagram\.com\/tv\/([A-Za-z0-9_\-]+)/,
+    ];
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+    // اگر کاربر فقط shortcode را وارد کرده باشد (بدون لینک کامل)
+    if (/^[A-Za-z0-9_\-]{5,}$/.test(url) && !url.includes('.') && !url.includes('/')) {
+        return url;
+    }
+    return null;
+}
+
+// نرمال‌سازی Comment ID — حذف کاراکترهای اضافه و تبدیل اعداد فارسی
+function normalizeCommentId(val) {
+    if (val === null || val === undefined) return '';
+    let s = String(val);
+    // تبدیل اعداد فارسی و عربی
+    s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+    // حذف هرچیزی غیر از عدد
+    s = s.replace(/\D/g, '').trim();
+    return s;
+}
+
+// به‌روزرسانی پیش‌نمایش به‌صورت realtime
+function igUpdatePreview() {
+    const colIdx = document.getElementById('igCommentCol').value;
+    const urlVal = document.getElementById('igPostUrl').value;
+    const shortcode = extractIgShortcode(urlVal);
+    const warn = document.getElementById('igWarnBox');
+    const previewRow = document.getElementById('igPreviewRow');
+    const shortcodeWrap = document.getElementById('igShortcodeWrap');
+
+    warn.style.display = 'none';
+    previewRow.style.display = 'none';
+    shortcodeWrap.style.display = 'none';
+    document.getElementById('btnIgLink').disabled = true;
+
+    // نمایش shortcode
+    if (urlVal.trim() !== '') {
+        if (shortcode) {
+            document.getElementById('igShortcodeBadge').textContent = shortcode;
+            shortcodeWrap.style.display = 'block';
+        } else {
+            warn.style.display = 'block';
+            warn.innerHTML = '⚠️ لینک پست اینستاگرام معتبر نیست.<br><small>مطمئن شوید لینک شامل <b>/p/</b> یا <b>/reel/</b> باشد.</small>';
+            return;
+        }
+    } else {
+        return;
+    }
+
+    if (colIdx === '' || !igRawData) return;
+
+    // نمایش پیش‌نمایش یک سطر
+    const col = parseInt(colIdx);
+    let sampleId = null;
+    for (let i = 1; i < igRawData.length; i++) {
+        const raw = igRawData[i][col];
+        const normalized = normalizeCommentId(raw);
+        if (normalized) { sampleId = normalized; break; }
+    }
+
+    if (sampleId && shortcode) {
+        const sampleLink = `https://www.instagram.com/p/${shortcode}/c/${sampleId}/`;
+        previewRow.style.display = 'block';
+        document.getElementById('igPreviewContent').innerHTML =
+            `<span class="ig-comment-id">${sampleId}</span><span class="ig-arrow">→</span><span class="ig-link">${sampleLink}</span>`;
+        document.getElementById('btnIgLink').disabled = false;
+    } else if (!sampleId) {
+        warn.style.display = 'block';
+        warn.innerHTML = '⚠️ هیچ Comment ID معتبری در ستون انتخاب‌شده یافت نشد.';
+    }
+}
+
+async function handleIgFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+    igRawData = data;
+    const headers = data[0] || [];
+    const sel = document.getElementById('igCommentCol');
+    sel.innerHTML = '<option value="">🎯 انتخاب ستون Comment ID...</option>';
+    headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون ' + (i + 1)}</option>`);
+    document.getElementById('igUpArea').classList.add('uploaded');
+    document.getElementById('igSt').textContent = '✅ ' + file.name;
+    document.getElementById('igControls').style.display = 'block';
+    igUpdatePreview();
+}
+
+function doIgLink() {
+    const colIdx = parseInt(document.getElementById('igCommentCol').value);
+    const urlVal = document.getElementById('igPostUrl').value;
+    const shortcode = extractIgShortcode(urlVal);
+    const btn = document.getElementById('btnIgLink');
+
+    if (!shortcode) {
+        document.getElementById('igWarnBox').style.display = 'block';
+        document.getElementById('igWarnBox').innerHTML = '⚠️ لینک معتبر نیست.';
+        return;
+    }
+
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const headers = igRawData[0] || [];
+    // ساخت هدر خروجی: همه ستون‌ها + ستون جدید Comment Link
+    const outHeaders = [...headers, 'Comment Link'];
+    const outRows = [outHeaders];
+
+    let builtCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 1; i < igRawData.length; i++) {
+        const row = igRawData[i];
+        // رد کردن ردیف‌های کاملاً خالی
+        if (!row.some(c => c !== null && c !== undefined && String(c).trim() !== '')) continue;
+
+        const rawId = row[colIdx];
+        const commentId = normalizeCommentId(rawId);
+
+        let link = '';
+        if (commentId) {
+            link = `https://www.instagram.com/p/${shortcode}/c/${commentId}/`;
+            builtCount++;
+        } else {
+            skippedCount++;
+        }
+
+        outRows.push([...row, link]);
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(outRows), 'Comment_Links');
+    XLSX.writeFile(wb, 'Instagram_Comment_Links.xlsx');
+
+    const r = document.getElementById('igResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل آماده شد!<br>
+        🔗 لینک‌های ساخته‌شده: <b>${builtCount}</b><br>
+        ⚪ ردیف‌های بدون Comment ID معتبر: <b>${skippedCount}</b><br>
+        🔑 Shortcode پست: <b style="direction:ltr;display:inline-block;">${shortcode}</b>`;
+
+    btn.innerText = '✅ فایل دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => {
+        btn.innerText = '📎 ساخت لینک‌ها و دانلود فایل';
+        btn.classList.remove('success');
+        btn.disabled = false;
+    }, 3000);
+}
+
+function resetIg() {
+    igRawData = null;
+    document.getElementById('igUpArea').classList.remove('uploaded');
+    document.getElementById('igUpArea').style.display = 'block';
+    document.getElementById('igSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('igControls').style.display = 'none';
+    document.getElementById('igCommentCol').innerHTML = '';
+    document.getElementById('igPostUrl').value = '';
+    document.getElementById('igResult').style.display = 'none';
+    document.getElementById('igWarnBox').style.display = 'none';
+    document.getElementById('igShortcodeWrap').style.display = 'none';
+    document.getElementById('igPreviewRow').style.display = 'none';
+    document.getElementById('btnIgLink').disabled = true;
 }
 </script>
 </body>
