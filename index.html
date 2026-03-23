@@ -237,6 +237,7 @@
         <button class="tab-btn" onclick="openTab('dedupTab',this)">🧹 حذف تکراری</button>
         <button class="tab-btn" onclick="openTab('previewTab',this)">👁️ پیش‌نمایش</button>
         <button class="tab-btn" onclick="openTab('igLinkTab',this)">📎 لینک کامنت</button>
+        <button class="tab-btn" onclick="openTab('convertTab',this)">🔄 تبدیل فرمت</button>
     </div>
 
     <!-- تب اول -->
@@ -533,6 +534,66 @@
             <div class="result-box" id="igResult"></div>
             <button onclick="resetIg()" class="reset-btn">❌ شروع مجدد</button>
         </div>
+    </div>
+
+    <!-- تب یازدهم: تبدیل فرمت Excel ↔ CSV -->
+    <div id="convertTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            <b>🔄 تبدیل فرمت فایل</b><br><br>
+            <b>📥 Excel → CSV:</b><br>
+            • فایل <b>xlsx / xls</b> را آپلود کنید.<br>
+            • جداکننده ستون‌ها را انتخاب کنید (کاما، سمی‌کالن یا Tab).<br>
+            • فایل <b>CSV</b> با انکدینگ <b>UTF-8 BOM</b> دانلود می‌شود (سازگار با اکسل فارسی).<br><br>
+            <b>📤 CSV → Excel:</b><br>
+            • فایل <b>csv</b> را آپلود کنید.<br>
+            • جداکننده را مشخص کنید (یا بگذارید خودکار تشخیص داده شود).<br>
+            • فایل <b>xlsx</b> کامل دانلود می‌شود.
+        </div>
+
+        <!-- انتخاب جهت تبدیل -->
+        <p class="section-label">جهت تبدیل:</p>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+            <button id="cvDirExcelToCsv" class="main-btn" style="margin-top:0;flex:1;padding:13px;font-size:13px;background:linear-gradient(135deg,#6366f1,#818cf8);" onclick="setCvDir('excel2csv')">📊 Excel → CSV</button>
+            <button id="cvDirCsvToExcel" class="main-btn" style="margin-top:0;flex:1;padding:13px;font-size:13px;background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);" onclick="setCvDir('csv2excel')">📄 CSV → Excel</button>
+        </div>
+
+        <div id="cvExcel2CsvSection">
+            <p class="section-label">جداکننده ستون‌ها:</p>
+            <select id="cvDelimiter" style="margin-top:8px;">
+                <option value=",">کاما  ,  (پیش‌فرض)</option>
+                <option value=";">سمی‌کالن  ;</option>
+                <option value="&#9;">Tab  →|</option>
+                <option value="|">پایپ  |</option>
+            </select>
+            <div class="upload-section" id="cvUpAreaExcel" style="margin-top:14px;">
+                <span style="font-size:30px;">📊</span><br>
+                <span id="cvStExcel">انتخاب فایل Excel (xlsx / xls)</span>
+                <input type="file" accept=".xlsx,.xls" onchange="handleCvExcelFile(this)">
+            </div>
+            <div id="cvExcelInfo" class="result-box" style="display:none;"></div>
+            <button id="btnCvExcel2Csv" class="main-btn" onclick="doCvExcel2Csv()" disabled>⬇️ دانلود فایل CSV</button>
+        </div>
+
+        <div id="cvCsv2ExcelSection" style="display:none;">
+            <p class="section-label">جداکننده (خودکار یا دستی):</p>
+            <select id="cvCsvDelimiter" style="margin-top:8px;">
+                <option value="auto">🤖 تشخیص خودکار</option>
+                <option value=",">کاما  ,</option>
+                <option value=";">سمی‌کالن  ;</option>
+                <option value="&#9;">Tab  →|</option>
+                <option value="|">پایپ  |</option>
+            </select>
+            <div class="upload-section" id="cvUpAreaCsv" style="margin-top:14px;">
+                <span style="font-size:30px;">📄</span><br>
+                <span id="cvStCsv">انتخاب فایل CSV</span>
+                <input type="file" accept=".csv,.txt" onchange="handleCvCsvFile(this)">
+            </div>
+            <div id="cvCsvInfo" class="result-box" style="display:none;"></div>
+            <button id="btnCvCsv2Excel" class="main-btn" onclick="doCvCsv2Excel()" disabled>⬇️ دانلود فایل Excel</button>
+        </div>
+
+        <div class="warn-box" id="cvWarn"></div>
+        <button onclick="resetCv()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 
 </div>
@@ -1525,6 +1586,180 @@ function resetIg() {
     document.getElementById('igShortcodeWrap').style.display = 'none';
     document.getElementById('igPreviewRow').style.display = 'none';
     document.getElementById('btnIgLink').disabled = true;
+}
+// ===== تب یازدهم: تبدیل فرمت Excel ↔ CSV =====
+let cvExcelData = null, cvCsvRawText = null, cvDirection = 'excel2csv';
+
+function setCvDir(dir) {
+    cvDirection = dir;
+    const e2c = document.getElementById('cvExcel2CsvSection');
+    const c2e = document.getElementById('cvCsv2ExcelSection');
+    const btnE = document.getElementById('cvDirExcelToCsv');
+    const btnC = document.getElementById('cvDirCsvToExcel');
+    const activeStyle = 'background:linear-gradient(135deg,#6366f1,#818cf8);color:white;border:none;';
+    const inactiveStyle = 'background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);';
+    if (dir === 'excel2csv') {
+        e2c.style.display = 'block'; c2e.style.display = 'none';
+        btnE.style.cssText += activeStyle; btnC.style.cssText += inactiveStyle;
+    } else {
+        e2c.style.display = 'none'; c2e.style.display = 'block';
+        btnC.style.cssText += activeStyle; btnE.style.cssText += inactiveStyle;
+    }
+    document.getElementById('cvWarn').style.display = 'none';
+}
+
+async function handleCvExcelFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) {
+        document.getElementById('cvWarn').style.display = 'block';
+        document.getElementById('cvWarn').innerHTML = '⚠️ فایل قابل خواندن نیست.';
+        return;
+    }
+    cvExcelData = data;
+    const rows = data.length - 1;
+    const cols = (data[0] || []).length;
+    const info = document.getElementById('cvExcelInfo');
+    info.style.display = 'block';
+    info.innerHTML = `✅ فایل بارگذاری شد<br>📊 <b>${rows.toLocaleString('fa-IR')}</b> ردیف &nbsp;·&nbsp; <b>${cols}</b> ستون`;
+    document.getElementById('cvUpAreaExcel').classList.add('uploaded');
+    document.getElementById('cvStExcel').textContent = '✅ ' + file.name;
+    document.getElementById('btnCvExcel2Csv').disabled = false;
+    document.getElementById('cvWarn').style.display = 'none';
+}
+
+function doCvExcel2Csv() {
+    if (!cvExcelData) return;
+    const btn = document.getElementById('btnCvExcel2Csv');
+    btn.innerText = '⏳ در حال تبدیل...'; btn.disabled = true;
+    const delim = document.getElementById('cvDelimiter').value;
+    try {
+        // ساخت محتوای CSV به‌صورت دستی برای کنترل دقیق انکدینگ و escape
+        const lines = cvExcelData.map(row => {
+            return row.map(cell => {
+                let val = (cell === null || cell === undefined) ? '' : String(cell);
+                // اگر مقدار شامل جداکننده، نقل‌قول یا newline بود، در quotes بگذار
+                if (val.includes(delim) || val.includes('"') || val.includes('\n') || val.includes('\r')) {
+                    val = '"' + val.replace(/"/g, '""') + '"';
+                }
+                return val;
+            }).join(delim);
+        });
+        const csvContent = lines.join('\r\n');
+        // UTF-8 BOM برای سازگاری با اکسل فارسی
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'output.csv'; a.click();
+        URL.revokeObjectURL(url);
+        btn.innerText = '✅ CSV دانلود شد!'; btn.classList.add('success');
+        setTimeout(() => { btn.innerText = '⬇️ دانلود فایل CSV'; btn.classList.remove('success'); btn.disabled = false; }, 3000);
+    } catch(e) {
+        document.getElementById('cvWarn').style.display = 'block';
+        document.getElementById('cvWarn').innerHTML = '⚠️ خطا در تبدیل: ' + e.message;
+        btn.innerText = '⬇️ دانلود فایل CSV'; btn.disabled = false;
+    }
+}
+
+async function handleCvCsvFile(input) {
+    const file = input.files[0]; if (!file) return;
+    try {
+        // خواندن با encoding صحیح
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        // تشخیص BOM
+        let text;
+        if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            text = new TextDecoder('utf-8').decode(buffer.slice(3));
+        } else if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+            text = new TextDecoder('utf-16le').decode(buffer.slice(2));
+        } else {
+            // ابتدا UTF-8 امتحان کن
+            try { text = new TextDecoder('utf-8', {fatal: true}).decode(buffer); }
+            catch(e) { text = new TextDecoder('windows-1256').decode(buffer); }
+        }
+        cvCsvRawText = text;
+        const lineCount = text.split('\n').filter(l => l.trim()).length - 1;
+        const info = document.getElementById('cvCsvInfo');
+        info.style.display = 'block';
+        info.innerHTML = `✅ فایل بارگذاری شد<br>📄 <b>${lineCount.toLocaleString('fa-IR')}</b> ردیف تخمینی`;
+        document.getElementById('cvUpAreaCsv').classList.add('uploaded');
+        document.getElementById('cvStCsv').textContent = '✅ ' + file.name;
+        document.getElementById('btnCvCsv2Excel').disabled = false;
+        document.getElementById('cvWarn').style.display = 'none';
+    } catch(e) {
+        document.getElementById('cvWarn').style.display = 'block';
+        document.getElementById('cvWarn').innerHTML = '⚠️ خطا در خواندن فایل: ' + e.message;
+    }
+}
+
+function detectCsvDelimiter(text) {
+    // بررسی چند خط اول برای تشخیص جداکننده
+    const firstLines = text.split('\n').slice(0, 5).join('\n');
+    const counts = {',': 0, ';': 0, '\t': 0, '|': 0};
+    for (const d of Object.keys(counts)) {
+        counts[d] = (firstLines.match(new RegExp(d === '\t' ? '\\t' : d.replace('|','\\|'), 'g')) || []).length;
+    }
+    return Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0];
+}
+
+function parseCsvText(text, delim) {
+    const rows = [];
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    for (const line of lines) {
+        if (!line.trim()) continue;
+        const cols = [];
+        let cur = '', inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuote) {
+                if (ch === '"') {
+                    if (line[i+1] === '"') { cur += '"'; i++; }
+                    else inQuote = false;
+                } else cur += ch;
+            } else {
+                if (ch === '"') inQuote = true;
+                else if (ch === delim) { cols.push(cur); cur = ''; }
+                else cur += ch;
+            }
+        }
+        cols.push(cur);
+        rows.push(cols);
+    }
+    return rows;
+}
+
+function doCvCsv2Excel() {
+    if (!cvCsvRawText) return;
+    const btn = document.getElementById('btnCvCsv2Excel');
+    btn.innerText = '⏳ در حال تبدیل...'; btn.disabled = true;
+    try {
+        let delim = document.getElementById('cvCsvDelimiter').value;
+        if (delim === 'auto') delim = detectCsvDelimiter(cvCsvRawText);
+        const rows = parseCsvText(cvCsvRawText, delim);
+        if (!rows.length) throw new Error('فایل خالی یا ناخوانا است');
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        XLSX.writeFile(wb, 'output.xlsx');
+        btn.innerText = '✅ Excel دانلود شد!'; btn.classList.add('success');
+        setTimeout(() => { btn.innerText = '⬇️ دانلود فایل Excel'; btn.classList.remove('success'); btn.disabled = false; }, 3000);
+    } catch(e) {
+        document.getElementById('cvWarn').style.display = 'block';
+        document.getElementById('cvWarn').innerHTML = '⚠️ خطا در تبدیل: ' + e.message;
+        btn.innerText = '⬇️ دانلود فایل Excel'; btn.disabled = false;
+    }
+}
+
+function resetCv() {
+    cvExcelData = null; cvCsvRawText = null;
+    ['cvUpAreaExcel','cvUpAreaCsv'].forEach(id => document.getElementById(id).classList.remove('uploaded'));
+    document.getElementById('cvStExcel').textContent = 'انتخاب فایل Excel (xlsx / xls)';
+    document.getElementById('cvStCsv').textContent = 'انتخاب فایل CSV';
+    ['cvExcelInfo','cvCsvInfo','cvWarn'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('btnCvExcel2Csv').disabled = true;
+    document.getElementById('btnCvCsv2Excel').disabled = true;
+    setCvDir('excel2csv');
 }
 </script>
 </body>
