@@ -241,6 +241,7 @@
         <button class="tab-btn" onclick="openTab('chunkTab',this)">✂️ خرد کردن</button>
         <button class="tab-btn" onclick="openTab('countryPhoneTab',this)">🌍 تفکیک کشوری</button>
         <button class="tab-btn" onclick="openTab('templateTab',this)">✍️ الگوی متنی</button>
+        <button class="tab-btn" onclick="openTab('colBuilderTab',this)">🏗️ ساخت فایل</button>
     </div>
 
     <!-- تب اول -->
@@ -744,10 +745,147 @@
         </div>
     </div>
 
+    <!-- تب پانزدهم: ساخت فایل از ستون‌های دو فایل -->
+    <div id="colBuilderTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            <b>🏗️ ساخت فایل از ستون‌های دو فایل</b><br><br>
+            <b>۱.</b> دو فایل اکسل را آپلود کنید.<br>
+            <b>۲.</b> از هر فایل، ستون‌هایی که می‌خواهید را با کلیک <b>به لیست خروجی اضافه کنید</b>.<br>
+            <b>۳.</b> ترتیب ستون‌ها را با درگ‌اندراپ یا دکمه‌های ↑↓ تنظیم کنید.<br>
+            <b>۴.</b> نام هر ستون را در خروجی ویرایش کنید.<br>
+            <b>۵.</b> تعداد ردیف هر دو فایل باید برابر باشد — اگر نبود، طولانی‌ترین ملاک است و سلول‌های خالی پر می‌شوند.
+        </div>
+
+        <!-- آپلود دو فایل -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+            <div>
+                <p class="section-label" style="margin-top:0;">📁 فایل اول</p>
+                <div class="upload-section" id="cbUp1" style="padding:16px;margin:6px 0 0;">
+                    <span style="font-size:24px;">📂</span><br>
+                    <span id="cbSt1" style="font-size:11px;">انتخاب فایل</span>
+                    <input type="file" accept=".xlsx,.xls,.csv" onchange="handleCbFile(this,1)">
+                </div>
+                <div id="cbInfo1" style="font-size:11px;color:#64748b;text-align:center;margin-top:4px;"></div>
+            </div>
+            <div>
+                <p class="section-label" style="margin-top:0;">📁 فایل دوم</p>
+                <div class="upload-section" id="cbUp2" style="padding:16px;margin:6px 0 0;">
+                    <span style="font-size:24px;">📂</span><br>
+                    <span id="cbSt2" style="font-size:11px;">انتخاب فایل</span>
+                    <input type="file" accept=".xlsx,.xls,.csv" onchange="handleCbFile(this,2)">
+                </div>
+                <div id="cbInfo2" style="font-size:11px;color:#64748b;text-align:center;margin-top:4px;"></div>
+            </div>
+        </div>
+
+        <div id="cbWorkspace" style="display:none;">
+            <!-- دو پنل ستون‌های منبع -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+                <div>
+                    <p class="section-label" style="margin-top:0;font-size:11px;">ستون‌های فایل ۱ — کلیک برای افزودن</p>
+                    <div id="cbSrcCols1" class="cb-src-panel"></div>
+                </div>
+                <div>
+                    <p class="section-label" style="margin-top:0;font-size:11px;">ستون‌های فایل ۲ — کلیک برای افزودن</p>
+                    <div id="cbSrcCols2" class="cb-src-panel"></div>
+                </div>
+            </div>
+
+            <!-- لیست ستون‌های خروجی -->
+            <p class="section-label" style="margin-top:16px;">📋 ستون‌های خروجی <span id="cbOutCount" style="color:#818cf8;"></span></p>
+            <div style="font-size:11px;color:#64748b;margin-bottom:8px;">نام ستون را ویرایش کنید • ↑↓ ترتیب را تغییر دهید • ✕ حذف کنید</div>
+            <div id="cbOutList" class="cb-out-panel">
+                <div id="cbOutEmpty" style="text-align:center;color:#334155;font-size:12px;padding:20px 0;">
+                    هنوز ستونی انتخاب نشده — روی ستون‌های بالا کلیک کنید
+                </div>
+            </div>
+
+            <div class="warn-box" id="cbWarn"></div>
+            <button id="btnCb" class="main-btn" onclick="doCbBuild()" disabled>🏗️ ساخت و دانلود فایل خروجی</button>
+            <div class="result-box" id="cbResult"></div>
+            <button onclick="resetCb()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+
 </div>
 
 <style>
-/* استایل دکمه‌های ستون در تب الگوی متنی */
+/* استایل تب ساخت فایل */
+.cb-src-panel {
+    background: rgba(15,23,42,0.5); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 14px; padding: 8px; min-height: 80px;
+    max-height: 200px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 5px;
+}
+.cb-src-col {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: 10px; cursor: pointer;
+    font-size: 11px; transition: all 0.18s;
+    border: 1px solid transparent; user-select: none;
+}
+.cb-src-col.file1 {
+    background: rgba(99,102,241,0.08); color: #c7d2fe;
+    border-color: rgba(99,102,241,0.15);
+}
+.cb-src-col.file2 {
+    background: rgba(192,132,252,0.08); color: #e9d5ff;
+    border-color: rgba(192,132,252,0.15);
+}
+.cb-src-col:hover { filter: brightness(1.4); transform: translateX(-2px); }
+.cb-src-col.added { opacity: 0.35; pointer-events: none; }
+.cb-src-col .cb-col-badge {
+    font-size: 9px; font-family: monospace; padding: 1px 5px;
+    border-radius: 4px; flex-shrink: 0;
+    background: rgba(255,255,255,0.06); color: #64748b;
+}
+.cb-out-panel {
+    background: rgba(15,23,42,0.4); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 14px; padding: 8px; min-height: 60px;
+    max-height: 280px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 5px;
+}
+.cb-out-row {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 10px; border-radius: 10px;
+    border: 1px solid rgba(99,102,241,0.2);
+    background: rgba(99,102,241,0.06);
+    cursor: grab; transition: background 0.15s;
+}
+.cb-out-row:active { cursor: grabbing; }
+.cb-out-row.dragging { opacity: 0.4; }
+.cb-out-row.drag-over { border-color: #818cf8; background: rgba(99,102,241,0.18); }
+.cb-out-row .cb-src-tag {
+    font-size: 9px; padding: 2px 7px; border-radius: 5px;
+    flex-shrink: 0; font-family: monospace; white-space: nowrap;
+}
+.cb-src-tag.t1 { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+.cb-src-tag.t2 { background: rgba(192,132,252,0.2); color: #d8b4fe; }
+.cb-out-row input[type="text"] {
+    flex: 1; background: transparent; border: none;
+    border-bottom: 1px solid rgba(99,102,241,0.25);
+    color: #f1f5f9; font-family: 'Vazirmatn'; font-size: 12px;
+    outline: none; padding: 2px 0; min-width: 0;
+}
+.cb-out-row input[type="text"]:focus { border-bottom-color: #818cf8; }
+.cb-order-btn {
+    background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+    color: #818cf8; border-radius: 6px; width: 22px; height: 22px;
+    cursor: pointer; font-size: 11px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; padding: 0; transition: 0.15s;
+}
+.cb-order-btn:hover { background: rgba(99,102,241,0.3); }
+.cb-del-btn {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+    color: #f87171; border-radius: 6px; width: 22px; height: 22px;
+    cursor: pointer; font-size: 12px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; padding: 0; transition: 0.15s;
+}
+.cb-del-btn:hover { background: rgba(239,68,68,0.3); }
+.cb-drag-handle {
+    color: #334155; font-size: 14px; cursor: grab; flex-shrink: 0;
+    padding: 0 2px;
+}
+</style>
 .tmpl-col-btn {
     padding: 7px 13px; border-radius: 10px; border: 1px solid rgba(99,102,241,0.3);
     background: rgba(99,102,241,0.1); color: #c7d2fe; font-family: 'Vazirmatn';
@@ -2462,6 +2600,238 @@ function resetTmpl() {
     ['tmplResult','tmplWarn','tmplPreviewBox'].forEach(id => document.getElementById(id).style.display = 'none');
     document.getElementById('tmplPreviewLabel').textContent = '';
     document.getElementById('btnTmpl').disabled = true;
+}
+
+// ===== تب پانزدهم: ساخت فایل از ستون‌های دو فایل =====
+let cbData1 = null, cbData2 = null;
+// لیست ستون‌های خروجی: [{fileIdx:1|2, colIdx:number, label:string, uid:string}]
+let cbOutputCols = [];
+let cbDragUid = null;
+
+function cbUid() { return Math.random().toString(36).slice(2, 8); }
+
+async function handleCbFile(input, fileNum) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+    if (fileNum === 1) {
+        cbData1 = data;
+        document.getElementById('cbUp1').classList.add('uploaded');
+        document.getElementById('cbSt1').textContent = '✅ ' + file.name;
+        document.getElementById('cbInfo1').textContent = (data.length - 1) + ' ردیف · ' + (data[0]||[]).length + ' ستون';
+    } else {
+        cbData2 = data;
+        document.getElementById('cbUp2').classList.add('uploaded');
+        document.getElementById('cbSt2').textContent = '✅ ' + file.name;
+        document.getElementById('cbInfo2').textContent = (data.length - 1) + ' ردیف · ' + (data[0]||[]).length + ' ستون';
+    }
+    if (cbData1 || cbData2) {
+        document.getElementById('cbWorkspace').style.display = 'block';
+        cbRenderSrcCols();
+    }
+}
+
+function cbRenderSrcCols() {
+    // فایل ۱
+    const p1 = document.getElementById('cbSrcCols1');
+    p1.innerHTML = '';
+    if (cbData1) {
+        (cbData1[0] || []).forEach((h, i) => {
+            const uid = `1_${i}`;
+            const alreadyAdded = cbOutputCols.some(c => c.fileIdx === 1 && c.colIdx === i);
+            const el = document.createElement('div');
+            el.className = 'cb-src-col file1' + (alreadyAdded ? ' added' : '');
+            el.dataset.uid = uid;
+            el.innerHTML = `<span class="cb-col-badge">F1·${i+1}</span> ${h || 'ستون ' + (i+1)}`;
+            el.onclick = () => cbAddCol(1, i, String(h || 'ستون_' + (i+1)));
+            p1.appendChild(el);
+        });
+    } else {
+        p1.innerHTML = '<div style="color:#334155;font-size:11px;text-align:center;padding:10px;">فایل آپلود نشده</div>';
+    }
+    // فایل ۲
+    const p2 = document.getElementById('cbSrcCols2');
+    p2.innerHTML = '';
+    if (cbData2) {
+        (cbData2[0] || []).forEach((h, i) => {
+            const alreadyAdded = cbOutputCols.some(c => c.fileIdx === 2 && c.colIdx === i);
+            const el = document.createElement('div');
+            el.className = 'cb-src-col file2' + (alreadyAdded ? ' added' : '');
+            el.innerHTML = `<span class="cb-col-badge">F2·${i+1}</span> ${h || 'ستون ' + (i+1)}`;
+            el.onclick = () => cbAddCol(2, i, String(h || 'ستون_' + (i+1)));
+            p2.appendChild(el);
+        });
+    } else {
+        p2.innerHTML = '<div style="color:#334155;font-size:11px;text-align:center;padding:10px;">فایل آپلود نشده</div>';
+    }
+}
+
+function cbAddCol(fileIdx, colIdx, label) {
+    cbOutputCols.push({ fileIdx, colIdx, label, uid: cbUid() });
+    cbRenderSrcCols();
+    cbRenderOutList();
+}
+
+function cbRemoveCol(uid) {
+    cbOutputCols = cbOutputCols.filter(c => c.uid !== uid);
+    cbRenderSrcCols();
+    cbRenderOutList();
+}
+
+function cbMoveCol(uid, dir) {
+    const idx = cbOutputCols.findIndex(c => c.uid === uid);
+    if (idx < 0) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= cbOutputCols.length) return;
+    const tmp = cbOutputCols[idx];
+    cbOutputCols[idx] = cbOutputCols[newIdx];
+    cbOutputCols[newIdx] = tmp;
+    cbRenderOutList();
+}
+
+function cbRenderOutList() {
+    const list = document.getElementById('cbOutList');
+    const empty = document.getElementById('cbOutEmpty');
+    const countEl = document.getElementById('cbOutCount');
+    const btn = document.getElementById('btnCb');
+
+    countEl.textContent = cbOutputCols.length > 0 ? `(${cbOutputCols.length} ستون)` : '';
+    btn.disabled = cbOutputCols.length === 0;
+
+    if (cbOutputCols.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        empty.style.display = 'block';
+        return;
+    }
+    if (empty.parentNode === list) list.removeChild(empty);
+
+    // پاک کردن همه row ها
+    list.innerHTML = '';
+    cbOutputCols.forEach((col, idx) => {
+        const row = document.createElement('div');
+        row.className = 'cb-out-row';
+        row.draggable = true;
+        row.dataset.uid = col.uid;
+
+        // drag events
+        row.addEventListener('dragstart', e => { cbDragUid = col.uid; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+        row.addEventListener('dragend', () => { cbDragUid = null; row.classList.remove('dragging'); document.querySelectorAll('.cb-out-row').forEach(r => r.classList.remove('drag-over')); });
+        row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.classList.add('drag-over'); });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', e => {
+            e.preventDefault(); row.classList.remove('drag-over');
+            if (!cbDragUid || cbDragUid === col.uid) return;
+            const fromIdx = cbOutputCols.findIndex(c => c.uid === cbDragUid);
+            const toIdx = cbOutputCols.findIndex(c => c.uid === col.uid);
+            if (fromIdx < 0 || toIdx < 0) return;
+            const [moved] = cbOutputCols.splice(fromIdx, 1);
+            cbOutputCols.splice(toIdx, 0, moved);
+            cbRenderOutList();
+        });
+
+        const handle = document.createElement('span');
+        handle.className = 'cb-drag-handle';
+        handle.textContent = '⠿';
+        handle.title = 'درگ برای جابجایی';
+
+        const tag = document.createElement('span');
+        tag.className = `cb-src-tag t${col.fileIdx}`;
+        tag.textContent = `F${col.fileIdx}`;
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = col.label;
+        nameInput.oninput = () => { cbOutputCols[cbOutputCols.findIndex(c => c.uid === col.uid)].label = nameInput.value; };
+
+        const upBtn = document.createElement('button');
+        upBtn.className = 'cb-order-btn'; upBtn.textContent = '↑'; upBtn.title = 'بالاتر';
+        upBtn.disabled = idx === 0;
+        upBtn.onclick = () => cbMoveCol(col.uid, -1);
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'cb-order-btn'; downBtn.textContent = '↓'; downBtn.title = 'پایین‌تر';
+        downBtn.disabled = idx === cbOutputCols.length - 1;
+        downBtn.onclick = () => cbMoveCol(col.uid, 1);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'cb-del-btn'; delBtn.textContent = '✕'; delBtn.title = 'حذف از خروجی';
+        delBtn.onclick = () => cbRemoveCol(col.uid);
+
+        row.append(handle, tag, nameInput, upBtn, downBtn, delBtn);
+        list.appendChild(row);
+    });
+}
+
+function doCbBuild() {
+    if (cbOutputCols.length === 0) return;
+    const btn = document.getElementById('btnCb');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+    document.getElementById('cbWarn').style.display = 'none';
+    document.getElementById('cbResult').style.display = 'none';
+
+    // طول ردیف‌ها بر اساس طولانی‌ترین فایل
+    const len1 = cbData1 ? cbData1.length - 1 : 0;
+    const len2 = cbData2 ? cbData2.length - 1 : 0;
+    const maxRows = Math.max(len1, len2);
+
+    if (maxRows === 0) {
+        document.getElementById('cbWarn').style.display = 'block';
+        document.getElementById('cbWarn').innerHTML = '⚠️ هیچ ردیف داده‌ای پیدا نشد.';
+        btn.innerText = '🏗️ ساخت و دانلود فایل خروجی'; btn.disabled = false; return;
+    }
+
+    if (len1 > 0 && len2 > 0 && len1 !== len2) {
+        document.getElementById('cbWarn').style.display = 'block';
+        document.getElementById('cbWarn').innerHTML = `⚠️ تعداد ردیف‌ها برابر نیست: فایل ۱ = <b>${len1}</b> ردیف، فایل ۲ = <b>${len2}</b> ردیف.<br>سلول‌های کمتر خالی می‌مانند.`;
+    }
+
+    // هدر خروجی
+    const headers = cbOutputCols.map(c => c.label);
+    const outputRows = [headers];
+
+    for (let r = 0; r < maxRows; r++) {
+        const row = cbOutputCols.map(col => {
+            const data = col.fileIdx === 1 ? cbData1 : cbData2;
+            if (!data) return '';
+            const dataRow = data[r + 1]; // +1 برای رد کردن هدر
+            if (!dataRow) return '';
+            const val = dataRow[col.colIdx];
+            return val !== null && val !== undefined ? val : '';
+        });
+        outputRows.push(row);
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(outputRows), 'Output');
+    XLSX.writeFile(wb, 'Column_Builder_Output.xlsx');
+
+    const r = document.getElementById('cbResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل آماده شد!<br>
+        📊 ستون‌های خروجی: <b>${cbOutputCols.length}</b><br>
+        🟢 ردیف‌های خروجی: <b>${maxRows.toLocaleString('fa-IR')}</b>`;
+
+    btn.innerText = '✅ فایل دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText = '🏗️ ساخت و دانلود فایل خروجی'; btn.classList.remove('success'); btn.disabled = false; }, 3000);
+}
+
+function resetCb() {
+    cbData1 = null; cbData2 = null; cbOutputCols = []; cbDragUid = null;
+    [1,2].forEach(n => {
+        document.getElementById(`cbUp${n}`).classList.remove('uploaded');
+        document.getElementById(`cbSt${n}`).textContent = 'انتخاب فایل';
+        document.getElementById(`cbInfo${n}`).textContent = '';
+    });
+    document.getElementById('cbWorkspace').style.display = 'none';
+    document.getElementById('cbSrcCols1').innerHTML = '';
+    document.getElementById('cbSrcCols2').innerHTML = '';
+    document.getElementById('cbOutList').innerHTML = '';
+    document.getElementById('cbOutList').appendChild(document.getElementById('cbOutEmpty'));
+    document.getElementById('cbOutEmpty').style.display = 'block';
+    document.getElementById('cbOutCount').textContent = '';
+    ['cbResult','cbWarn'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('btnCb').disabled = true;
 }
 </script>
 </body>
