@@ -815,7 +815,7 @@
                     </div>
                 </div>
                 <div id="cbPreviewTableWrap" style="overflow-x:auto;overflow-y:auto;max-height:320px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(15,23,42,0.5);">
-                    <table id="cbPreviewTable" style="border-collapse:collapse;width:max-content;min-width:100%;font-family:Vazirmatn;font-size:11px;direction:rtl;"></table>
+                    <table id="cbPreviewTable" style="border-collapse:collapse;width:max-content;min-width:100%;font-family:Vazirmatn;font-size:11px;direction:rtl;table-layout:auto;"></table>
                 </div>
             </div>
 
@@ -905,20 +905,27 @@
     padding: 0 2px;
 }
 /* جدول پیش‌نمایش خروجی */
+#cbPreviewTable {
+    table-layout: auto;
+    width: max-content;
+    min-width: 100%;
+}
 #cbPreviewTable th {
     background: rgba(99,102,241,0.18); color: #a5b4fc;
-    padding: 9px 14px; text-align: right; font-weight: 700; font-size: 11px;
+    padding: 9px 16px; text-align: right; font-weight: 700; font-size: 11px;
     white-space: nowrap; position: sticky; top: 0; z-index: 2;
     border-bottom: 1px solid rgba(99,102,241,0.25);
+    min-width: 100px;
 }
 #cbPreviewTable th .cb-th-src {
     display: block; font-size: 9px; color: #6366f1; font-weight: normal;
     font-family: monospace; margin-top: 2px;
 }
 #cbPreviewTable td {
-    padding: 7px 14px; color: #cbd5e1; white-space: nowrap;
+    padding: 7px 16px; color: #cbd5e1; white-space: nowrap;
     border-bottom: 1px solid rgba(255,255,255,0.04);
-    max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+    min-width: 100px; max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis;
 }
 #cbPreviewTable tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 #cbPreviewTable tr:hover td { background: rgba(99,102,241,0.07); }
