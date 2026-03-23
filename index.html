@@ -1180,10 +1180,16 @@ var APP_PASSWORD = 'excel1404';
 function checkPassword(){
     const input=document.getElementById('pwdInput');
     const error=document.getElementById('lockError');
-    if(input.value===APP_PASSWORD){
+    const entered = input.value;
+    const stored = APP_PASSWORD;
+    // debug موقت
+    console.log('entered:', JSON.stringify(entered), 'len:', entered.length);
+    console.log('stored:', JSON.stringify(stored), 'len:', stored.length);
+    if(entered===stored){
         document.getElementById('lockScreen').style.display='none';
         sessionStorage.setItem('unlocked','1');
     } else {
+        console.log('NO MATCH');
         error.textContent='❌ رمز اشتباه است';
         input.classList.add('shake'); input.value='';
         setTimeout(()=>{input.classList.remove('shake');error.textContent='';},1500);
