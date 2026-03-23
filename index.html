@@ -238,6 +238,7 @@
         <button class="tab-btn" onclick="openTab('previewTab',this)">👁️ پیش‌نمایش</button>
         <button class="tab-btn" onclick="openTab('igLinkTab',this)">📎 لینک کامنت</button>
         <button class="tab-btn" onclick="openTab('convertTab',this)">🔄 تبدیل فرمت</button>
+        <button class="tab-btn" onclick="openTab('chunkTab',this)">✂️ خرد کردن</button>
     </div>
 
     <!-- تب اول -->
@@ -596,7 +597,83 @@
         <button onclick="resetCv()" class="reset-btn">❌ شروع مجدد</button>
     </div>
 
+    <!-- تب دوازدهم: خرد کردن فایل اکسل -->
+    <div id="chunkTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            <b>✂️ خرد کردن فایل اکسل</b><br><br>
+            <b>۱.</b> فایل اکسل را آپلود کنید.<br>
+            <b>۲.</b> تعداد ردیف هر فایل خروجی را وارد کنید.<br>
+            <b>۳.</b> ستون‌هایی که <b>نمی‌خواهید</b> در خروجی باشند را حذف کنید.<br>
+            <b>۴.</b> در صورت نیاز نام ستون‌ها را ویرایش کنید.<br>
+            <b>۵.</b> گزینه <b>«حذف ردیف عنوان»</b> را بزنید تا سرستون‌ها در خروجی حذف شوند.<br>
+            <b>۶.</b> دکمه «خرد کن و دانلود ZIP» را بزنید.<br><br>
+            یک فایل <b>ZIP</b> دریافت می‌کنید که هر قطعه فایل جداگانه‌ای است.
+        </div>
+
+        <div class="upload-section" id="chunkUpArea">
+            <span style="font-size:30px;">✂️</span><br>
+            <span id="chunkSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleChunkFile(this)">
+        </div>
+
+        <div id="chunkControls" style="display:none;">
+
+            <!-- آمار فایل -->
+            <div id="chunkStats" class="info-box" style="margin-top:10px;"></div>
+
+            <!-- تعداد ردیف هر قطعه -->
+            <p class="section-label">تعداد ردیف در هر فایل:</p>
+            <input type="number" id="chunkRowCount" value="1000" min="1" placeholder="مثلاً ۱۰۰۰" oninput="chunkUpdatePreview()" style="margin-top:8px;">
+            <div id="chunkPreviewInfo" style="font-size:12px;color:#94a3b8;margin-top:6px;text-align:center;"></div>
+
+            <!-- گزینه حذف ردیف عنوان -->
+            <label style="display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:14px;padding:12px 16px;">
+                <input type="checkbox" id="chunkRemoveHeader" onchange="chunkUpdatePreview()" style="width:18px;height:18px;accent-color:#818cf8;cursor:pointer;flex-shrink:0;">
+                <span style="font-size:13px;color:#c7d2fe;">حذف ردیف عنوان (سرستون‌ها در خروجی نباشند)</span>
+            </label>
+
+            <!-- مدیریت ستون‌ها -->
+            <p class="section-label" style="margin-top:16px;">مدیریت ستون‌ها:</p>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;margin-bottom:8px;">نام ستون را ویرایش کنید یا با دکمه ✕ آن را از خروجی حذف کنید.</div>
+            <div id="chunkColList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-left:2px;"></div>
+
+            <button id="btnChunk" class="main-btn" onclick="doChunk()" style="margin-top:18px;">✂️ خرد کن و دانلود ZIP</button>
+            <div class="result-box" id="chunkResult"></div>
+            <div class="warn-box" id="chunkWarn"></div>
+            <button onclick="resetChunk()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+
 </div>
+
+<style>
+/* استایل‌های اضافی برای تب خرد کردن */
+.chunk-col-row {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(15,23,42,0.5); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 12px; padding: 8px 12px;
+}
+.chunk-col-row input[type="text"] {
+    flex: 1; background: transparent; border: none; color: #e2e8f0;
+    font-family: 'Vazirmatn'; font-size: 12px; outline: none; padding: 2px 0;
+    border-bottom: 1px solid rgba(99,102,241,0.2);
+}
+.chunk-col-row input[type="text"]:focus { border-bottom-color: #818cf8; }
+.chunk-col-row .col-idx-badge {
+    font-size: 10px; color: #475569; font-family: monospace;
+    background: rgba(99,102,241,0.08); padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+}
+.chunk-col-del {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+    color: #f87171; border-radius: 8px; padding: 4px 10px;
+    cursor: pointer; font-size: 13px; flex-shrink: 0; transition: 0.2s;
+}
+.chunk-col-del:hover { background: rgba(239,68,68,0.25); }
+.chunk-col-del.deleted {
+    background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.2);
+    color: #34d399;
+}
+</style>
 
 <footer>طراحی و توسعه: سایبری لرستان</footer>
 
@@ -1760,6 +1837,172 @@ function resetCv() {
     document.getElementById('btnCvExcel2Csv').disabled = true;
     document.getElementById('btnCvCsv2Excel').disabled = true;
     setCvDir('excel2csv');
+}
+
+// ===== تب دوازدهم: خرد کردن فایل اکسل =====
+let chunkRawData = null;
+// آرایه‌ای از آبجکت‌ها: {originalIdx, label, deleted}
+let chunkCols = [];
+
+async function handleChunkFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) {
+        alert('⚠️ فایل قابل خواندن نیست.');
+        return;
+    }
+    chunkRawData = data;
+    const headers = data[0] || [];
+    const dataRows = data.length - 1;
+    const colCount = headers.length;
+
+    // ساخت لیست ستون‌ها
+    chunkCols = headers.map((h, i) => ({
+        originalIdx: i,
+        label: String(h || 'ستون ' + (i + 1)),
+        deleted: false
+    }));
+
+    document.getElementById('chunkUpArea').classList.add('uploaded');
+    document.getElementById('chunkSt').textContent = '✅ ' + file.name;
+    document.getElementById('chunkControls').style.display = 'block';
+    document.getElementById('chunkStats').innerHTML =
+        `📊 <b>${dataRows.toLocaleString('fa-IR')}</b> ردیف داده &nbsp;·&nbsp; <b>${colCount}</b> ستون &nbsp;·&nbsp; <span style="color:#64748b;font-size:11px;">${file.name}</span>`;
+
+    renderChunkColList();
+    chunkUpdatePreview();
+}
+
+function renderChunkColList() {
+    const container = document.getElementById('chunkColList');
+    container.innerHTML = '';
+    chunkCols.forEach((col, idx) => {
+        const row = document.createElement('div');
+        row.className = 'chunk-col-row';
+        row.style.opacity = col.deleted ? '0.4' : '1';
+        row.style.transition = 'opacity 0.2s';
+
+        const badge = document.createElement('span');
+        badge.className = 'col-idx-badge';
+        badge.textContent = '#' + (idx + 1);
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = col.label;
+        nameInput.disabled = col.deleted;
+        nameInput.placeholder = 'نام ستون...';
+        nameInput.oninput = () => { chunkCols[idx].label = nameInput.value; };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'chunk-col-del' + (col.deleted ? ' deleted' : '');
+        delBtn.textContent = col.deleted ? '↩' : '✕';
+        delBtn.title = col.deleted ? 'بازگرداندن ستون' : 'حذف ستون از خروجی';
+        delBtn.onclick = () => {
+            chunkCols[idx].deleted = !chunkCols[idx].deleted;
+            renderChunkColList();
+            chunkUpdatePreview();
+        };
+
+        row.appendChild(badge);
+        row.appendChild(nameInput);
+        row.appendChild(delBtn);
+        container.appendChild(row);
+    });
+}
+
+function chunkUpdatePreview() {
+    if (!chunkRawData) return;
+    const rowCount = parseInt(document.getElementById('chunkRowCount').value) || 1000;
+    const dataRows = chunkRawData.length - 1;
+    const activeCols = chunkCols.filter(c => !c.deleted).length;
+    const removeHeader = document.getElementById('chunkRemoveHeader').checked;
+    const totalRowsInOutput = removeHeader ? dataRows : dataRows;
+    const fileCount = Math.ceil(dataRows / rowCount);
+    const info = document.getElementById('chunkPreviewInfo');
+    info.innerHTML = `→ <b style="color:#818cf8;">${fileCount}</b> فایل خروجی &nbsp;·&nbsp; <b style="color:#c084fc;">${activeCols}</b> ستون فعال`;
+}
+
+async function doChunk() {
+    if (!chunkRawData) return;
+    const rowCount = parseInt(document.getElementById('chunkRowCount').value);
+    if (!rowCount || rowCount < 1) {
+        document.getElementById('chunkWarn').style.display = 'block';
+        document.getElementById('chunkWarn').innerHTML = '⚠️ تعداد ردیف باید بزرگ‌تر از صفر باشد.';
+        return;
+    }
+    const activeCols = chunkCols.filter(c => !c.deleted);
+    if (activeCols.length === 0) {
+        document.getElementById('chunkWarn').style.display = 'block';
+        document.getElementById('chunkWarn').innerHTML = '⚠️ حداقل یک ستون باید فعال باشد.';
+        return;
+    }
+    document.getElementById('chunkWarn').style.display = 'none';
+    document.getElementById('chunkResult').style.display = 'none';
+
+    const btn = document.getElementById('btnChunk');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+
+    const removeHeader = document.getElementById('chunkRemoveHeader').checked;
+    // ردیف‌های داده (بدون هدر)
+    const dataRows = chunkRawData.slice(1).filter(r =>
+        r.some(c => c !== null && c !== undefined && String(c).trim() !== '')
+    );
+    const totalRows = dataRows.length;
+    const fileCount = Math.ceil(totalRows / rowCount);
+
+    // هدر خروجی (نام‌های ویرایش‌شده)
+    const outputHeader = activeCols.map(c => c.label);
+
+    const zip = new JSZip();
+    const digits = String(fileCount).length; // برای نام‌گذاری یکنواخت (part_01, part_02 ...)
+
+    for (let i = 0; i < fileCount; i++) {
+        const chunk = dataRows.slice(i * rowCount, (i + 1) * rowCount);
+        // اعمال ستون‌های فعال
+        const outputRows = chunk.map(row =>
+            activeCols.map(col => row[col.originalIdx] ?? '')
+        );
+        // اضافه کردن هدر اگر لازم است
+        const sheetData = removeHeader ? outputRows : [outputHeader, ...outputRows];
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        const partNum = String(i + 1).padStart(digits, '0');
+        zip.file(`part_${partNum}.xlsx`, XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a'); a.href = url; a.download = 'chunked_files.zip'; a.click();
+    URL.revokeObjectURL(url);
+
+    const r = document.getElementById('chunkResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل ZIP آماده شد!<br>
+        📦 تعداد فایل‌های خروجی: <b>${fileCount}</b><br>
+        🟢 مجموع ردیف‌های داده: <b>${totalRows.toLocaleString('fa-IR')}</b><br>
+        📊 ستون‌های خروجی: <b>${activeCols.length}</b><br>
+        ${removeHeader ? '🚫 ردیف عنوان حذف شد' : '✅ ردیف عنوان موجود است'}`;
+
+    btn.innerText = '✅ ZIP دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => {
+        btn.innerText = '✂️ خرد کن و دانلود ZIP';
+        btn.classList.remove('success');
+        btn.disabled = false;
+    }, 3000);
+}
+
+function resetChunk() {
+    chunkRawData = null; chunkCols = [];
+    document.getElementById('chunkUpArea').classList.remove('uploaded');
+    document.getElementById('chunkUpArea').style.display = 'block';
+    document.getElementById('chunkSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('chunkControls').style.display = 'none';
+    document.getElementById('chunkColList').innerHTML = '';
+    document.getElementById('chunkRowCount').value = '1000';
+    document.getElementById('chunkRemoveHeader').checked = false;
+    document.getElementById('chunkPreviewInfo').textContent = '';
+    ['chunkResult','chunkWarn'].forEach(id => document.getElementById(id).style.display = 'none');
 }
 </script>
 </body>
