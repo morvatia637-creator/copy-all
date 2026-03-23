@@ -239,6 +239,7 @@
         <button class="tab-btn" onclick="openTab('igLinkTab',this)">📎 لینک کامنت</button>
         <button class="tab-btn" onclick="openTab('convertTab',this)">🔄 تبدیل فرمت</button>
         <button class="tab-btn" onclick="openTab('chunkTab',this)">✂️ خرد کردن</button>
+        <button class="tab-btn" onclick="openTab('countryPhoneTab',this)">🌍 تفکیک کشوری</button>
     </div>
 
     <!-- تب اول -->
@@ -641,6 +642,37 @@
             <div class="result-box" id="chunkResult"></div>
             <div class="warn-box" id="chunkWarn"></div>
             <button onclick="resetChunk()" class="reset-btn">❌ شروع مجدد</button>
+        </div>
+    </div>
+
+    <!-- تب سیزدهم: تفکیک کشوری بر اساس پیش‌شماره -->
+    <div id="countryPhoneTab" class="tab-content" style="display:none;">
+        <div class="info-box">
+            <b>🌍 تفکیک کشوری شماره تلفن</b><br><br>
+            • فایل اکسل را آپلود کنید و ستون شماره تلفن را انتخاب کنید.<br>
+            • شماره‌ها باید با <b>کد کشور</b> شروع شوند (با + یا بدون آن).<br>
+            &nbsp;&nbsp;مثال: <span style="direction:ltr;display:inline-block;font-size:11px;color:#c084fc;">+989123456789 &nbsp;یا&nbsp; 989123456789 &nbsp;یا&nbsp; 00989123456789</span><br>
+            • سیستم بر اساس دیتابیس <b>+۲۳۵ کشور</b> شماره‌ها را تشخیص می‌دهد.<br>
+            • یک فایل <b>ZIP</b> دریافت می‌کنید که هر کشور فایل جداگانه‌ای است.<br>
+            • شماره‌های ناشناس در فایل <b>نامشخص</b> ذخیره می‌شوند.<br><br>
+            <b>⚠️ نکته:</b> شماره‌های ایرانی که با <b>09</b> شروع می‌شوند باید ابتدا با تب «اصلاح شماره» به فرمت <b>+98</b> تبدیل شوند.
+        </div>
+
+        <div class="upload-section" id="cpUpArea">
+            <span style="font-size:30px;">🌍</span><br>
+            <span id="cpSt">انتخاب فایل اکسل</span>
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleCpFile(this)">
+        </div>
+
+        <div id="cpControls" style="display:none;">
+            <div id="cpStats" class="info-box" style="margin-top:10px;"></div>
+            <p class="section-label">ستون شماره تلفن:</p>
+            <select id="cpPhoneCol" onchange="cpUpdatePreview()"></select>
+            <div id="cpPreviewSample" class="preview-box" style="margin-top:8px;"></div>
+            <button id="btnCp" class="main-btn" onclick="doCpSplit()" disabled>🌍 تفکیک کشوری و دانلود ZIP</button>
+            <div class="result-box" id="cpResult"></div>
+            <div class="warn-box" id="cpWarn"></div>
+            <button onclick="resetCp()" class="reset-btn">❌ شروع مجدد</button>
         </div>
     </div>
 
@@ -2003,6 +2035,187 @@ function resetChunk() {
     document.getElementById('chunkRemoveHeader').checked = false;
     document.getElementById('chunkPreviewInfo').textContent = '';
     ['chunkResult','chunkWarn'].forEach(id => document.getElementById(id).style.display = 'none');
+}
+
+// ===== تب سیزدهم: تفکیک کشوری بر اساس پیش‌شماره =====
+// دیتابیس کامل پیش‌شماره‌های کشورها
+// مرتب‌شده از طولانی‌ترین به کوتاه‌ترین برای تشخیص دقیق
+const COUNTRY_CODES_DB = [
+    // ۴ رقمی اول (NANP sub-codes)
+    {code:'1201',country:'ایالات متحده (نیوجرسی)'},{code:'1202',country:'ایالات متحده (واشنگتن دی‌سی)'},{code:'1203',country:'ایالات متحده (کانکتیکات)'},{code:'1204',country:'کانادا (مانیتوبا)'},{code:'1205',country:'ایالات متحده (آلاباما)'},{code:'1206',country:'ایالات متحده (واشنگتن)'},{code:'1207',country:'ایالات متحده (مین)'},{code:'1208',country:'ایالات متحده (آیداهو)'},{code:'1209',country:'ایالات متحده (کالیفرنیا)'},{code:'1210',country:'ایالات متحده (تگزاس)'},{code:'1212',country:'ایالات متحده (نیویورک)'},{code:'1213',country:'ایالات متحده (کالیفرنیا)'},{code:'1214',country:'ایالات متحده (تگزاس)'},{code:'1215',country:'ایالات متحده (پنسیلوانیا)'},{code:'1216',country:'ایالات متحده (اوهایو)'},{code:'1217',country:'ایالات متحده (ایلینوی)'},{code:'1218',country:'ایالات متحده (مینه‌سوتا)'},{code:'1219',country:'ایالات متحده (ایندیانا)'},{code:'1224',country:'ایالات متحده (ایلینوی)'},{code:'1225',country:'ایالات متحده (لوییزیانا)'},{code:'1226',country:'کانادا (انتاریو)'},{code:'1228',country:'ایالات متحده (میسیسیپی)'},{code:'1229',country:'ایالات متحده (جورجیا)'},{code:'1231',country:'ایالات متحده (میشیگان)'},{code:'1234',country:'ایالات متحده (اوهایو)'},{code:'1236',country:'کانادا (بریتیش کلمبیا)'},{code:'1239',country:'ایالات متحده (فلوریدا)'},{code:'1240',country:'ایالات متحده (مریلند)'},{code:'1242',country:'باهاما'},{code:'1246',country:'باربادوس'},{code:'1248',country:'ایالات متحده (میشیگان)'},{code:'1249',country:'کانادا (انتاریو)'},{code:'1250',country:'کانادا (بریتیش کلمبیا)'},{code:'1251',country:'ایالات متحده (آلاباما)'},{code:'1252',country:'ایالات متحده (کارولینای شمالی)'},{code:'1253',country:'ایالات متحده (واشنگتن)'},{code:'1254',country:'ایالات متحده (تگزاس)'},{code:'1256',country:'ایالات متحده (آلاباما)'},{code:'1260',country:'ایالات متحده (ایندیانا)'},{code:'1262',country:'ایالات متحده (ویسکانسین)'},{code:'1264',country:'آنگیلا'},{code:'1267',country:'ایالات متحده (پنسیلوانیا)'},{code:'1268',country:'آنتیگوا و باربودا'},{code:'1269',country:'ایالات متحده (میشیگان)'},{code:'1270',country:'ایالات متحده (کنتاکی)'},{code:'1272',country:'ایالات متحده (پنسیلوانیا)'},{code:'1276',country:'ایالات متحده (ویرجینیا)'},{code:'1278',country:'ایالات متحده (میشیگان)'},{code:'1281',country:'ایالات متحده (تگزاس)'},{code:'1284',country:'جزایر ویرجین بریتانیا'},{code:'1289',country:'کانادا (انتاریو)'},{code:'1301',country:'ایالات متحده (مریلند)'},{code:'1302',country:'ایالات متحده (دلاور)'},{code:'1303',country:'ایالات متحده (کلرادو)'},{code:'1304',country:'ایالات متحده (ویرجینیای غربی)'},{code:'1305',country:'ایالات متحده (فلوریدا)'},{code:'1306',country:'کانادا (ساسکاچوان)'},{code:'1307',country:'ایالات متحده (وایومینگ)'},{code:'1308',country:'ایالات متحده (نبراسکا)'},{code:'1309',country:'ایالات متحده (ایلینوی)'},{code:'1310',country:'ایالات متحده (کالیفرنیا)'},{code:'1312',country:'ایالات متحده (ایلینوی)'},{code:'1313',country:'ایالات متحده (میشیگان)'},{code:'1314',country:'ایالات متحده (میسوری)'},{code:'1315',country:'ایالات متحده (نیویورک)'},{code:'1316',country:'ایالات متحده (کانزاس)'},{code:'1317',country:'ایالات متحده (ایندیانا)'},{code:'1318',country:'ایالات متحده (لوییزیانا)'},{code:'1319',country:'ایالات متحده (آیووا)'},{code:'1320',country:'ایالات متحده (مینه‌سوتا)'},{code:'1321',country:'ایالات متحده (فلوریدا)'},{code:'1323',country:'ایالات متحده (کالیفرنیا)'},{code:'1325',country:'ایالات متحده (تگزاس)'},{code:'1330',country:'ایالات متحده (اوهایو)'},{code:'1331',country:'ایالات متحده (ایلینوی)'},{code:'1334',country:'ایالات متحده (آلاباما)'},{code:'1336',country:'ایالات متحده (کارولینای شمالی)'},{code:'1337',country:'ایالات متحده (لوییزیانا)'},{code:'1339',country:'ایالات متحده (ماساچوست)'},{code:'1340',country:'جزایر ویرجین آمریکا'},{code:'1343',country:'کانادا (انتاریو)'},{code:'1345',country:'جزایر کیمن'},{code:'1347',country:'ایالات متحده (نیویورک)'},{code:'1351',country:'ایالات متحده (ماساچوست)'},{code:'1352',country:'ایالات متحده (فلوریدا)'},{code:'1360',country:'ایالات متحده (واشنگتن)'},{code:'1361',country:'ایالات متحده (تگزاس)'},{code:'1365',country:'کانادا (انتاریو)'},{code:'1380',country:'ایالات متحده (اوهایو)'},{code:'1385',country:'ایالات متحده (یوتا)'},{code:'1386',country:'ایالات متحده (فلوریدا)'},{code:'1401',country:'ایالات متحده (رود آیلند)'},{code:'1402',country:'ایالات متحده (نبراسکا)'},{code:'1403',country:'کانادا (آلبرتا)'},{code:'1404',country:'ایالات متحده (جورجیا)'},{code:'1405',country:'ایالات متحده (اوکلاهما)'},{code:'1406',country:'ایالات متحده (مونتانا)'},{code:'1407',country:'ایالات متحده (فلوریدا)'},{code:'1408',country:'ایالات متحده (کالیفرنیا)'},{code:'1409',country:'ایالات متحده (تگزاس)'},{code:'1410',country:'ایالات متحده (مریلند)'},{code:'1412',country:'ایالات متحده (پنسیلوانیا)'},{code:'1413',country:'ایالات متحده (ماساچوست)'},{code:'1414',country:'ایالات متحده (ویسکانسین)'},{code:'1415',country:'ایالات متحده (کالیفرنیا)'},{code:'1416',country:'کانادا (انتاریو)'},{code:'1417',country:'ایالات متحده (میسوری)'},{code:'1418',country:'کانادا (کبک)'},{code:'1419',country:'ایالات متحده (اوهایو)'},{code:'1423',country:'ایالات متحده (تنسی)'},{code:'1424',country:'ایالات متحده (کالیفرنیا)'},{code:'1425',country:'ایالات متحده (واشنگتن)'},{code:'1430',country:'ایالات متحده (تگزاس)'},{code:'1431',country:'کانادا (مانیتوبا)'},{code:'1432',country:'ایالات متحده (تگزاس)'},{code:'1434',country:'ایالات متحده (ویرجینیا)'},{code:'1435',country:'ایالات متحده (یوتا)'},{code:'1438',country:'کانادا (کبک)'},{code:'1440',country:'ایالات متحده (اوهایو)'},{code:'1441',country:'برمودا'},{code:'1442',country:'ایالات متحده (کالیفرنیا)'},{code:'1443',country:'ایالات متحده (مریلند)'},{code:'1447',country:'ایالات متحده (ایلینوی)'},{code:'1450',country:'کانادا (کبک)'},{code:'1458',country:'ایالات متحده (اورگن)'},{code:'1469',country:'ایالات متحده (تگزاس)'},{code:'1470',country:'ایالات متحده (جورجیا)'},{code:'1473',country:'گرنادا'},{code:'1478',country:'ایالات متحده (جورجیا)'},{code:'1479',country:'ایالات متحده (آرکانزاس)'},{code:'1480',country:'ایالات متحده (آریزونا)'},{code:'1484',country:'ایالات متحده (پنسیلوانیا)'},{code:'1501',country:'ایالات متحده (آرکانزاس)'},{code:'1502',country:'ایالات متحده (کنتاکی)'},{code:'1503',country:'ایالات متحده (اورگن)'},{code:'1504',country:'ایالات متحده (لوییزیانا)'},{code:'1505',country:'ایالات متحده (نیومکزیکو)'},{code:'1506',country:'کانادا (نیوبرانزویک)'},{code:'1507',country:'ایالات متحده (مینه‌سوتا)'},{code:'1508',country:'ایالات متحده (ماساچوست)'},{code:'1509',country:'ایالات متحده (واشنگتن)'},{code:'1510',country:'ایالات متحده (کالیفرنیا)'},{code:'1512',country:'ایالات متحده (تگزاس)'},{code:'1513',country:'ایالات متحده (اوهایو)'},{code:'1514',country:'کانادا (کبک)'},{code:'1515',country:'ایالات متحده (آیووا)'},{code:'1516',country:'ایالات متحده (نیویورک)'},{code:'1517',country:'ایالات متحده (میشیگان)'},{code:'1518',country:'ایالات متحده (نیویورک)'},{code:'1519',country:'کانادا (انتاریو)'},{code:'1520',country:'ایالات متحده (آریزونا)'},{code:'1530',country:'ایالات متحده (کالیفرنیا)'},{code:'1531',country:'ایالات متحده (نبراسکا)'},{code:'1534',country:'ایالات متحده (ویسکانسین)'},{code:'1539',country:'ایالات متحده (اوکلاهما)'},{code:'1540',country:'ایالات متحده (ویرجینیا)'},{code:'1541',country:'ایالات متحده (اورگن)'},{code:'1548',country:'کانادا (انتاریو)'},{code:'1551',country:'ایالات متحده (نیوجرسی)'},{code:'1559',country:'ایالات متحده (کالیفرنیا)'},{code:'1561',country:'ایالات متحده (فلوریدا)'},{code:'1562',country:'ایالات متحده (کالیفرنیا)'},{code:'1563',country:'ایالات متحده (آیووا)'},{code:'1567',country:'ایالات متحده (اوهایو)'},{code:'1571',country:'ایالات متحده (ویرجینیا)'},{code:'1573',country:'ایالات متحده (میسوری)'},{code:'1574',country:'ایالات متحده (ایندیانا)'},{code:'1575',country:'ایالات متحده (نیومکزیکو)'},{code:'1580',country:'ایالات متحده (اوکلاهما)'},{code:'1585',country:'ایالات متحده (نیویورک)'},{code:'1586',country:'ایالات متحده (میشیگان)'},{code:'1587',country:'کانادا (آلبرتا)'},{code:'1601',country:'ایالات متحده (میسیسیپی)'},{code:'1602',country:'ایالات متحده (آریزونا)'},{code:'1603',country:'ایالات متحده (نیوهمپشایر)'},{code:'1604',country:'کانادا (بریتیش کلمبیا)'},{code:'1605',country:'ایالات متحده (داکوتای جنوبی)'},{code:'1606',country:'ایالات متحده (کنتاکی)'},{code:'1607',country:'ایالات متحده (نیویورک)'},{code:'1608',country:'ایالات متحده (ویسکانسین)'},{code:'1609',country:'ایالات متحده (نیوجرسی)'},{code:'1610',country:'ایالات متحده (پنسیلوانیا)'},{code:'1612',country:'ایالات متحده (مینه‌سوتا)'},{code:'1613',country:'کانادا (انتاریو)'},{code:'1614',country:'ایالات متحده (اوهایو)'},{code:'1615',country:'ایالات متحده (تنسی)'},{code:'1616',country:'ایالات متحده (میشیگان)'},{code:'1617',country:'ایالات متحده (ماساچوست)'},{code:'1618',country:'ایالات متحده (ایلینوی)'},{code:'1619',country:'ایالات متحده (کالیفرنیا)'},{code:'1620',country:'ایالات متحده (کانزاس)'},{code:'1623',country:'ایالات متحده (آریزونا)'},{code:'1626',country:'ایالات متحده (کالیفرنیا)'},{code:'1628',country:'ایالات متحده (کالیفرنیا)'},{code:'1629',country:'ایالات متحده (تنسی)'},{code:'1630',country:'ایالات متحده (ایلینوی)'},{code:'1631',country:'ایالات متحده (نیویورک)'},{code:'1636',country:'ایالات متحده (میسوری)'},{code:'1641',country:'ایالات متحده (آیووا)'},{code:'1646',country:'ایالات متحده (نیویورک)'},{code:'1647',country:'کانادا (انتاریو)'},{code:'1649',country:'جزایر ترکس و کایکوس'},{code:'1650',country:'ایالات متحده (کالیفرنیا)'},{code:'1651',country:'ایالات متحده (مینه‌سوتا)'},{code:'1657',country:'ایالات متحده (کالیفرنیا)'},{code:'1659',country:'ایالات متحده (آلاباما)'},{code:'1660',country:'ایالات متحده (میسوری)'},{code:'1661',country:'ایالات متحده (کالیفرنیا)'},{code:'1662',country:'ایالات متحده (میسیسیپی)'},{code:'1664',country:'مونتسرات'},{code:'1667',country:'ایالات متحده (مریلند)'},{code:'1669',country:'ایالات متحده (کالیفرنیا)'},{code:'1670',country:'جزایر ماریانای شمالی'},{code:'1671',country:'گوام'},{code:'1678',country:'ایالات متحده (جورجیا)'},{code:'1681',country:'ایالات متحده (ویرجینیای غربی)'},{code:'1682',country:'ایالات متحده (تگزاس)'},{code:'1684',country:'ساموا آمریکایی'},{code:'1701',country:'ایالات متحده (داکوتای شمالی)'},{code:'1702',country:'ایالات متحده (نوادا)'},{code:'1703',country:'ایالات متحده (ویرجینیا)'},{code:'1704',country:'ایالات متحده (کارولینای شمالی)'},{code:'1705',country:'کانادا (انتاریو)'},{code:'1706',country:'ایالات متحده (جورجیا)'},{code:'1707',country:'ایالات متحده (کالیفرنیا)'},{code:'1708',country:'ایالات متحده (ایلینوی)'},{code:'1709',country:'کانادا (نیوفاندلند)'},{code:'1712',country:'ایالات متحده (آیووا)'},{code:'1713',country:'ایالات متحده (تگزاس)'},{code:'1714',country:'ایالات متحده (کالیفرنیا)'},{code:'1715',country:'ایالات متحده (ویسکانسین)'},{code:'1716',country:'ایالات متحده (نیویورک)'},{code:'1717',country:'ایالات متحده (پنسیلوانیا)'},{code:'1718',country:'ایالات متحده (نیویورک)'},{code:'1719',country:'ایالات متحده (کلرادو)'},{code:'1720',country:'ایالات متحده (کلرادو)'},{code:'1724',country:'ایالات متحده (پنسیلوانیا)'},{code:'1725',country:'ایالات متحده (نوادا)'},{code:'1726',country:'ایالات متحده (تگزاس)'},{code:'1727',country:'ایالات متحده (فلوریدا)'},{code:'1731',country:'ایالات متحده (تنسی)'},{code:'1732',country:'ایالات متحده (نیوجرسی)'},{code:'1734',country:'ایالات متحده (میشیگان)'},{code:'1737',country:'ایالات متحده (تگزاس)'},{code:'1740',country:'ایالات متحده (اوهایو)'},{code:'1747',country:'ایالات متحده (کالیفرنیا)'},{code:'1754',country:'ایالات متحده (فلوریدا)'},{code:'1757',country:'ایالات متحده (ویرجینیا)'},{code:'1758',country:'سنت لوسیا'},{code:'1760',country:'ایالات متحده (کالیفرنیا)'},{code:'1762',country:'ایالات متحده (جورجیا)'},{code:'1763',country:'ایالات متحده (مینه‌سوتا)'},{code:'1764',country:'ایالات متحده (کالیفرنیا)'},{code:'1765',country:'ایالات متحده (ایندیانا)'},{code:'1767',country:'دومینیکا'},{code:'1769',country:'ایالات متحده (میسیسیپی)'},{code:'1770',country:'ایالات متحده (جورجیا)'},{code:'1771',country:'ایالات متحده (جورجیا)'},{code:'1772',country:'ایالات متحده (فلوریدا)'},{code:'1773',country:'ایالات متحده (ایلینوی)'},{code:'1774',country:'ایالات متحده (ماساچوست)'},{code:'1775',country:'ایالات متحده (نوادا)'},{code:'1778',country:'کانادا (بریتیش کلمبیا)'},{code:'1779',country:'ایالات متحده (ایلینوی)'},{code:'1780',country:'کانادا (آلبرتا)'},{code:'1781',country:'ایالات متحده (ماساچوست)'},{code:'1782',country:'کانادا (نوا اسکوشیا)'},{code:'1784',country:'سنت وینسنت و گرنادین'},{code:'1785',country:'ایالات متحده (کانزاس)'},{code:'1786',country:'ایالات متحده (فلوریدا)'},{code:'1787',country:'پورتوریکو'},{code:'1801',country:'ایالات متحده (یوتا)'},{code:'1802',country:'ایالات متحده (ورمونت)'},{code:'1803',country:'ایالات متحده (کارولینای جنوبی)'},{code:'1804',country:'ایالات متحده (ویرجینیا)'},{code:'1805',country:'ایالات متحده (کالیفرنیا)'},{code:'1806',country:'ایالات متحده (تگزاس)'},{code:'1807',country:'کانادا (انتاریو)'},{code:'1808',country:'ایالات متحده (هاوایی)'},{code:'1809',country:'جمهوری دومینیکن'},{code:'1812',country:'ایالات متحده (ایندیانا)'},{code:'1813',country:'ایالات متحده (فلوریدا)'},{code:'1814',country:'ایالات متحده (پنسیلوانیا)'},{code:'1815',country:'ایالات متحده (ایلینوی)'},{code:'1816',country:'ایالات متحده (میسوری)'},{code:'1817',country:'ایالات متحده (تگزاس)'},{code:'1818',country:'ایالات متحده (کالیفرنیا)'},{code:'1819',country:'کانادا (کبک)'},{code:'1820',country:'ایالات متحده (کارولینای جنوبی)'},{code:'1825',country:'کانادا (آلبرتا)'},{code:'1828',country:'ایالات متحده (کارولینای شمالی)'},{code:'1830',country:'ایالات متحده (تگزاس)'},{code:'1831',country:'ایالات متحده (کالیفرنیا)'},{code:'1832',country:'ایالات متحده (تگزاس)'},{code:'1838',country:'ایالات متحده (نیویورک)'},{code:'1843',country:'ایالات متحده (کارولینای جنوبی)'},{code:'1845',country:'ایالات متحده (نیویورک)'},{code:'1847',country:'ایالات متحده (ایلینوی)'},{code:'1848',country:'ایالات متحده (نیوجرسی)'},{code:'1849',country:'جمهوری دومینیکن'},{code:'1850',country:'ایالات متحده (فلوریدا)'},{code:'1856',country:'ایالات متحده (نیوجرسی)'},{code:'1857',country:'ایالات متحده (ماساچوست)'},{code:'1858',country:'ایالات متحده (کالیفرنیا)'},{code:'1859',country:'ایالات متحده (کنتاکی)'},{code:'1860',country:'ایالات متحده (کانکتیکات)'},{code:'1862',country:'ایالات متحده (نیوجرسی)'},{code:'1863',country:'ایالات متحده (فلوریدا)'},{code:'1864',country:'ایالات متحده (کارولینای جنوبی)'},{code:'1865',country:'ایالات متحده (تنسی)'},{code:'1867',country:'کانادا (یوکان)'},{code:'1868',country:'ترینیداد و توباگو'},{code:'1869',country:'سنت کیتس و نویس'},{code:'1870',country:'ایالات متحده (آرکانزاس)'},{code:'1872',country:'ایالات متحده (ایلینوی)'},{code:'1873',country:'کانادا (کبک)'},{code:'1876',country:'جامائیکا'},{code:'1878',country:'ایالات متحده (پنسیلوانیا)'},{code:'1901',country:'ایالات متحده (تنسی)'},{code:'1902',country:'کانادا (نوا اسکوشیا)'},{code:'1903',country:'ایالات متحده (تگزاس)'},{code:'1904',country:'ایالات متحده (فلوریدا)'},{code:'1905',country:'کانادا (انتاریو)'},{code:'1906',country:'ایالات متحده (میشیگان)'},{code:'1907',country:'ایالات متحده (آلاسکا)'},{code:'1908',country:'ایالات متحده (نیوجرسی)'},{code:'1909',country:'ایالات متحده (کالیفرنیا)'},{code:'1910',country:'ایالات متحده (کارولینای شمالی)'},{code:'1912',country:'ایالات متحده (جورجیا)'},{code:'1913',country:'ایالات متحده (کانزاس)'},{code:'1914',country:'ایالات متحده (نیویورک)'},{code:'1915',country:'ایالات متحده (تگزاس)'},{code:'1916',country:'ایالات متحده (کالیفرنیا)'},{code:'1917',country:'ایالات متحده (نیویورک)'},{code:'1918',country:'ایالات متحده (اوکلاهما)'},{code:'1919',country:'ایالات متحده (کارولینای شمالی)'},{code:'1920',country:'ایالات متحده (ویسکانسین)'},{code:'1925',country:'ایالات متحده (کالیفرنیا)'},{code:'1928',country:'ایالات متحده (آریزونا)'},{code:'1929',country:'ایالات متحده (نیویورک)'},{code:'1930',country:'ایالات متحده (ایلینوی)'},{code:'1931',country:'ایالات متحده (تنسی)'},{code:'1934',country:'ایالات متحده (نیویورک)'},{code:'1936',country:'ایالات متحده (تگزاس)'},{code:'1937',country:'ایالات متحده (اوهایو)'},{code:'1938',country:'ایالات متحده (آلاباما)'},{code:'1939',country:'پورتوریکو'},{code:'1940',country:'ایالات متحده (تگزاس)'},{code:'1941',country:'ایالات متحده (فلوریدا)'},{code:'1947',country:'ایالات متحده (میشیگان)'},{code:'1949',country:'ایالات متحده (کالیفرنیا)'},{code:'1951',country:'ایالات متحده (کالیفرنیا)'},{code:'1952',country:'ایالات متحده (مینه‌سوتا)'},{code:'1954',country:'ایالات متحده (فلوریدا)'},{code:'1956',country:'ایالات متحده (تگزاس)'},{code:'1959',country:'ایالات متحده (کانکتیکات)'},{code:'1970',country:'ایالات متحده (کلرادو)'},{code:'1971',country:'ایالات متحده (اورگن)'},{code:'1972',country:'ایالات متحده (تگزاس)'},{code:'1973',country:'ایالات متحده (نیوجرسی)'},{code:'1975',country:'ایالات متحده (میسوری)'},{code:'1978',country:'ایالات متحده (ماساچوست)'},{code:'1979',country:'ایالات متحده (تگزاس)'},{code:'1980',country:'ایالات متحده (کارولینای شمالی)'},{code:'1984',country:'ایالات متحده (کارولینای شمالی)'},{code:'1985',country:'ایالات متحده (لوییزیانا)'},{code:'1989',country:'ایالات متحده (میشیگان)'},
+    // ۳ رقمی
+    {code:'20',country:'مصر'},{code:'212',country:'مراکش'},{code:'213',country:'الجزایر'},{code:'216',country:'تونس'},{code:'218',country:'لیبی'},{code:'220',country:'گامبیا'},{code:'221',country:'سنگال'},{code:'222',country:'موریتانی'},{code:'223',country:'مالی'},{code:'224',country:'گینه'},{code:'225',country:'ساحل عاج'},{code:'226',country:'بورکینافاسو'},{code:'227',country:'نیجر'},{code:'228',country:'توگو'},{code:'229',country:'بنین'},{code:'230',country:'موریس'},{code:'231',country:'لیبریا'},{code:'232',country:'سیرالئون'},{code:'233',country:'غنا'},{code:'234',country:'نیجریه'},{code:'235',country:'چاد'},{code:'236',country:'جمهوری آفریقای مرکزی'},{code:'237',country:'کامرون'},{code:'238',country:'کیپ ورد'},{code:'239',country:'سائوتومه و پرینسیپه'},{code:'240',country:'گینه استوایی'},{code:'241',country:'گابن'},{code:'242',country:'جمهوری کنگو'},{code:'243',country:'جمهوری دموکراتیک کنگو'},{code:'244',country:'آنگولا'},{code:'245',country:'گینه بیسائو'},{code:'246',country:'جزیره دیگو گارسیا'},{code:'247',country:'جزیره اسنشن'},{code:'248',country:'سیشل'},{code:'249',country:'سودان'},{code:'250',country:'رواندا'},{code:'251',country:'اتیوپی'},{code:'252',country:'سومالی'},{code:'253',country:'جیبوتی'},{code:'254',country:'کنیا'},{code:'255',country:'تانزانیا'},{code:'256',country:'اوگاندا'},{code:'257',country:'بوروندی'},{code:'258',country:'موزامبیک'},{code:'260',country:'زامبیا'},{code:'261',country:'ماداگاسکار'},{code:'262',country:'رئونیون'},{code:'263',country:'زیمبابوه'},{code:'264',country:'نامیبیا'},{code:'265',country:'مالاوی'},{code:'266',country:'لسوتو'},{code:'267',country:'بوتسوانا'},{code:'268',country:'اسواتینی'},{code:'269',country:'کومور'},{code:'27',country:'آفریقای جنوبی'},{code:'290',country:'سنت هلنا'},{code:'291',country:'اریتره'},{code:'297',country:'آروبا'},{code:'298',country:'جزایر فارو'},{code:'299',country:'گرینلند'},
+    {code:'30',country:'یونان'},{code:'31',country:'هلند'},{code:'32',country:'بلژیک'},{code:'33',country:'فرانسه'},{code:'34',country:'اسپانیا'},{code:'350',country:'جبل‌الطارق'},{code:'351',country:'پرتغال'},{code:'352',country:'لوکزامبورگ'},{code:'353',country:'ایرلند'},{code:'354',country:'ایسلند'},{code:'355',country:'آلبانی'},{code:'356',country:'مالت'},{code:'357',country:'قبرس'},{code:'358',country:'فنلاند'},{code:'359',country:'بلغارستان'},{code:'36',country:'مجارستان'},{code:'370',country:'لیتوانی'},{code:'371',country:'لتونی'},{code:'372',country:'استونی'},{code:'373',country:'مولداوی'},{code:'374',country:'ارمنستان'},{code:'375',country:'بلاروس'},{code:'376',country:'آندورا'},{code:'377',country:'موناکو'},{code:'378',country:'سن مارینو'},{code:'379',country:'واتیکان'},{code:'380',country:'اوکراین'},{code:'381',country:'صربستان'},{code:'382',country:'مونته‌نگرو'},{code:'383',country:'کوزوو'},{code:'385',country:'کرواسی'},{code:'386',country:'اسلوونی'},{code:'387',country:'بوسنی و هرزگوین'},{code:'389',country:'مقدونیه شمالی'},{code:'39',country:'ایتالیا'},
+    {code:'40',country:'رومانی'},{code:'41',country:'سوئیس'},{code:'420',country:'جمهوری چک'},{code:'421',country:'اسلواکی'},{code:'423',country:'لیختن‌اشتاین'},{code:'43',country:'اتریش'},{code:'44',country:'بریتانیا'},{code:'45',country:'دانمارک'},{code:'46',country:'سوئد'},{code:'47',country:'نروژ'},{code:'48',country:'لهستان'},{code:'49',country:'آلمان'},
+    {code:'500',country:'جزایر فالکلند'},{code:'501',country:'بلیز'},{code:'502',country:'گواتمالا'},{code:'503',country:'السالوادور'},{code:'504',country:'هندوراس'},{code:'505',country:'نیکاراگوئه'},{code:'506',country:'کاستاریکا'},{code:'507',country:'پاناما'},{code:'508',country:'سنت پیر و میکلن'},{code:'509',country:'هائیتی'},{code:'51',country:'پرو'},{code:'52',country:'مکزیک'},{code:'53',country:'کوبا'},{code:'54',country:'آرژانتین'},{code:'55',country:'برزیل'},{code:'56',country:'شیلی'},{code:'57',country:'کلمبیا'},{code:'58',country:'ونزوئلا'},{code:'590',country:'گوادلوپ'},{code:'591',country:'بولیوی'},{code:'592',country:'گویان'},{code:'593',country:'اکوادور'},{code:'594',country:'گویان فرانسه'},{code:'595',country:'پاراگوئه'},{code:'596',country:'مارتینیک'},{code:'597',country:'سورینام'},{code:'598',country:'اروگوئه'},{code:'599',country:'کوراسائو'},
+    {code:'60',country:'مالزی'},{code:'61',country:'استرالیا'},{code:'62',country:'اندونزی'},{code:'63',country:'فیلیپین'},{code:'64',country:'نیوزیلند'},{code:'65',country:'سنگاپور'},{code:'66',country:'تایلند'},{code:'670',country:'تیمور شرقی'},{code:'672',country:'سرزمین‌های خارجی استرالیا'},{code:'673',country:'برونئی'},{code:'674',country:'نائورو'},{code:'675',country:'پاپوا گینه نو'},{code:'676',country:'تونگا'},{code:'677',country:'جزایر سلیمان'},{code:'678',country:'وانواتو'},{code:'679',country:'فیجی'},{code:'680',country:'پالائو'},{code:'681',country:'والیس و فوتونا'},{code:'682',country:'جزایر کوک'},{code:'683',country:'نیوئه'},{code:'685',country:'ساموا'},{code:'686',country:'کیریباتی'},{code:'687',country:'کالدونیای نو'},{code:'688',country:'تووالو'},{code:'689',country:'پلی‌نزی فرانسه'},{code:'690',country:'توکلائو'},{code:'691',country:'میکرونزی'},{code:'692',country:'جزایر مارشال'},
+    {code:'7',country:'روسیه / قزاقستان'},
+    {code:'800',country:'خدمات بین‌الملل رایگان'},{code:'808',country:'خدمات اشتراکی بین‌الملل'},
+    {code:'81',country:'ژاپن'},{code:'82',country:'کره جنوبی'},{code:'84',country:'ویتنام'},{code:'850',country:'کره شمالی'},{code:'852',country:'هنگ‌کنگ'},{code:'853',country:'ماکائو'},{code:'855',country:'کامبوج'},{code:'856',country:'لائوس'},{code:'86',country:'چین'},{code:'880',country:'بنگلادش'},{code:'886',country:'تایوان'},
+    {code:'90',country:'ترکیه'},{code:'91',country:'هند'},{code:'92',country:'پاکستان'},{code:'93',country:'افغانستان'},{code:'94',country:'سریلانکا'},{code:'95',country:'میانمار'},{code:'960',country:'مالدیو'},{code:'961',country:'لبنان'},{code:'962',country:'اردن'},{code:'963',country:'سوریه'},{code:'964',country:'عراق'},{code:'965',country:'کویت'},{code:'966',country:'عربستان سعودی'},{code:'967',country:'یمن'},{code:'968',country:'عمان'},{code:'970',country:'فلسطین'},{code:'971',country:'امارات متحده عربی'},{code:'972',country:'اسرائیل'},{code:'973',country:'بحرین'},{code:'974',country:'قطر'},{code:'975',country:'بوتان'},{code:'976',country:'مغولستان'},{code:'977',country:'نپال'},{code:'98',country:'ایران'},{code:'992',country:'تاجیکستان'},{code:'993',country:'ترکمنستان'},{code:'994',country:'آذربایجان'},{code:'995',country:'گرجستان'},{code:'996',country:'قرقیزستان'},{code:'998',country:'ازبکستان'},
+];
+
+// ایجاد Map مرتب از طولانی‌ترین به کوتاه‌ترین برای تطابق دقیق
+const CP_CODE_MAP = new Map();
+// ابتدا ۴ رقمی‌ها، بعد ۳ رقمی‌ها، بعد ۲ رقمی‌ها، بعد ۱ رقمی
+[4,3,2,1].forEach(len => {
+    COUNTRY_CODES_DB.forEach(entry => {
+        if (entry.code.length === len) CP_CODE_MAP.set(entry.code, entry.country);
+    });
+});
+
+function normalizeIntlPhone(val) {
+    if (val === null || val === undefined) return '';
+    let s = String(val);
+    // تبدیل اعداد فارسی/عربی
+    s = s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString());
+    s = s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+    // حذف فاصله و خط‌تیره
+    s = s.replace(/[\s\-().]/g, '');
+    // حذف + ابتدایی
+    if (s.startsWith('+')) s = s.substring(1);
+    // تبدیل 00 ابتدایی به حذف
+    if (s.startsWith('00')) s = s.substring(2);
+    // فقط اعداد بمانند
+    s = s.replace(/\D/g, '');
+    return s;
+}
+
+function detectCountryFromPhone(normalized) {
+    if (!normalized || normalized.length < 4) return null;
+    // تلاش از طولانی‌ترین کد به کوتاه‌ترین
+    for (const len of [4, 3, 2, 1]) {
+        const prefix = normalized.substring(0, len);
+        if (CP_CODE_MAP.has(prefix)) return {country: CP_CODE_MAP.get(prefix), code: prefix};
+    }
+    return null;
+}
+
+let cpRawData = null;
+
+async function handleCpFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const data = await readExcelFile(file);
+    if (!data) { alert('⚠️ فایل قابل خواندن نیست.'); return; }
+    cpRawData = data;
+    const headers = data[0] || [];
+    const dataRows = data.length - 1;
+    const sel = document.getElementById('cpPhoneCol');
+    sel.innerHTML = '<option value="">🎯 انتخاب ستون...</option>';
+    headers.forEach((h, i) => sel.innerHTML += `<option value="${i}">${h || 'ستون ' + (i + 1)}</option>`);
+    document.getElementById('cpUpArea').classList.add('uploaded');
+    document.getElementById('cpSt').textContent = '✅ ' + file.name;
+    document.getElementById('cpControls').style.display = 'block';
+    document.getElementById('cpStats').innerHTML =
+        `📊 <b>${dataRows.toLocaleString('fa-IR')}</b> ردیف &nbsp;·&nbsp; <b>${headers.length}</b> ستون &nbsp;·&nbsp; <span style="color:#64748b;font-size:11px;">${file.name}</span>`;
+}
+
+function cpUpdatePreview() {
+    const colIdx = document.getElementById('cpPhoneCol').value;
+    const warn = document.getElementById('cpWarn');
+    const preview = document.getElementById('cpPreviewSample');
+    warn.style.display = 'none';
+    preview.style.display = 'none';
+    document.getElementById('btnCp').disabled = true;
+    if (colIdx === '' || !cpRawData) return;
+    const col = parseInt(colIdx);
+    const samples = [];
+    for (let i = 1; i < cpRawData.length && samples.length < 5; i++) {
+        const raw = cpRawData[i][col];
+        if (raw === null || raw === undefined || String(raw).trim() === '') continue;
+        const norm = normalizeIntlPhone(raw);
+        const detected = detectCountryFromPhone(norm);
+        samples.push({raw, norm, detected});
+    }
+    if (samples.length === 0) {
+        warn.style.display = 'block';
+        warn.innerHTML = '⚠️ ستون انتخاب‌شده خالی به نظر می‌رسد.';
+        return;
+    }
+    const rows = samples.map(s =>
+        `<span class="pv-val">${s.raw}</span> → <span style="color:#34d399;">${s.detected ? s.detected.country : '❓ ناشناس'}</span>`
+    ).join('<br>');
+    preview.innerHTML = `<span class="pv-head">پیش‌نمایش تشخیص کشور:</span>${rows}`;
+    preview.style.display = 'block';
+    document.getElementById('btnCp').disabled = false;
+}
+
+async function doCpSplit() {
+    const colIdx = parseInt(document.getElementById('cpPhoneCol').value);
+    const btn = document.getElementById('btnCp');
+    btn.innerText = '⏳ در حال پردازش...'; btn.disabled = true;
+    document.getElementById('cpWarn').style.display = 'none';
+    document.getElementById('cpResult').style.display = 'none';
+
+    const headers = cpRawData[0] || [];
+    const groups = {};
+    let unknownRows = [];
+    let totalProcessed = 0;
+
+    for (let i = 1; i < cpRawData.length; i++) {
+        const row = cpRawData[i];
+        if (!row.some(c => c !== null && c !== undefined && String(c).trim() !== '')) continue;
+        const norm = normalizeIntlPhone(row[colIdx]);
+        const detected = detectCountryFromPhone(norm);
+        totalProcessed++;
+        if (detected) {
+            const key = detected.country;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(row);
+        } else {
+            unknownRows.push(row);
+        }
+    }
+
+    if (totalProcessed === 0) {
+        document.getElementById('cpWarn').style.display = 'block';
+        document.getElementById('cpWarn').innerHTML = '⚠️ هیچ ردیف معتبری پیدا نشد.';
+        btn.innerText = '🌍 تفکیک کشوری و دانلود ZIP'; btn.disabled = false;
+        return;
+    }
+
+    const zip = new JSZip();
+    const countryNames = Object.keys(groups).sort();
+
+    for (const country of countryNames) {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...groups[country]]), country.substring(0, 31));
+        zip.file(`${country}.xlsx`, XLSX.write(wb, {bookType: 'xlsx', type: 'array'}));
+    }
+
+    if (unknownRows.length > 0) {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...unknownRows]), 'نامشخص');
+        zip.file('نامشخص.xlsx', XLSX.write(wb, {bookType: 'xlsx', type: 'array'}));
+    }
+
+    const zipBlob = await zip.generateAsync({type: 'blob'});
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a'); a.href = url; a.download = 'تفکیک_کشوری.zip'; a.click();
+    URL.revokeObjectURL(url);
+
+    const knownCount = totalProcessed - unknownRows.length;
+    const r = document.getElementById('cpResult');
+    r.style.display = 'block';
+    r.innerHTML = `✅ فایل ZIP آماده شد!<br>
+        🌍 تعداد کشورها: <b>${countryNames.length}</b><br>
+        🟢 شماره‌های شناسایی‌شده: <b>${knownCount.toLocaleString('fa-IR')}</b><br>
+        ⚪ شماره‌های ناشناس: <b>${unknownRows.length.toLocaleString('fa-IR')}</b><br>
+        <span style="font-size:11px;color:#94a3b8;">${countryNames.slice(0,8).join(' | ')}${countryNames.length > 8 ? ' | ...' : ''}</span>`;
+
+    btn.innerText = '✅ ZIP دانلود شد!'; btn.classList.add('success');
+    setTimeout(() => { btn.innerText = '🌍 تفکیک کشوری و دانلود ZIP'; btn.classList.remove('success'); btn.disabled = false; }, 3000);
+}
+
+function resetCp() {
+    cpRawData = null;
+    document.getElementById('cpUpArea').classList.remove('uploaded');
+    document.getElementById('cpUpArea').style.display = 'block';
+    document.getElementById('cpSt').textContent = 'انتخاب فایل اکسل';
+    document.getElementById('cpControls').style.display = 'none';
+    document.getElementById('cpPhoneCol').innerHTML = '';
+    ['cpResult','cpWarn','cpPreviewSample'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('btnCp').disabled = true;
 }
 </script>
 </body>
